@@ -1,0 +1,63 @@
+import mongoose, { Document, Model, Schema } from 'mongoose';
+import data from '../../enum';
+
+export interface IRegistration extends Document {
+    userName: string;
+    email: string;
+    phoneNumber: number;
+    organisations: mongoose.Types.ObjectId[];
+    plan: string;
+    place: string;
+    role: string;
+}
+
+const RegistartionSchema: Schema<IRegistration> = new Schema<IRegistration>(
+    {
+        userName: {
+            type: String,
+            required: true,
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+        },
+        phoneNumber: {
+            type: Number,
+            required: true,
+            unique: true,
+        },
+        organisations: {
+            type: [
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'organisation',
+                },
+            ],
+        },
+        plan: {
+            type: String,
+            required: true,
+            enum: data.plan,
+            default: 'basic',
+        },
+        place: {
+            type: String,
+            required: true,
+        },
+        role: {
+            type: String,
+            required: true,
+            enum: data.role,
+            default: 'superAdmin',
+        },
+    },
+    { timestamps: { createdAt: 'dCreatedAt', updatedAt: 'dUpdatedAt' } },
+);
+
+const Registration: Model<IRegistration> = mongoose.model<IRegistration>(
+    'registration',
+    RegistartionSchema,
+);
+
+export default Registration;

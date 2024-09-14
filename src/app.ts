@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-// import router from "./routes";
+import router from "./routes";
 import bodyParser from 'body-parser';
 
 const app = express();
@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// app.use("/api/v1", router);
+app.use("/api/v1", router);
 
 app.use('*', (_req: Request, res: Response) => {
     return res.status(404).send({ success: false, message: 'Route not found' });

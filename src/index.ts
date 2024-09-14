@@ -13,6 +13,7 @@ function connectToDbAndRunServer() {
 
         await mongoose.connect(DATABASE_URL);
         mongoose.connection.on('error', (error: Error) => console.log(error));
+        console.log('Connect to database successfully...');
     });
 }
 

@@ -2,11 +2,11 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 import data from '../../enum';
 
 export interface IUser extends Document {
-    userName: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phoneNumber: number;
     hash: string;
-    pinHash: string;
     role: string;
     permissions: IPermission[];
     organization: mongoose.Types.ObjectId[];
@@ -36,9 +36,13 @@ const permissionSchema: Schema<IPermission> = new Schema<IPermission>(
 
 const UserSchema: Schema<IUser> = new Schema<IUser>(
     {
-        userName: {
+        firstName: {
             type: String,
-            unique: true,
+            required: true,
+        },
+        lastName: {
+            type: String,
+            required: true,
         },
         email: {
             type: String,
@@ -49,7 +53,6 @@ const UserSchema: Schema<IUser> = new Schema<IUser>(
             unique: true,
         },
         hash: String,
-        pinHash: String,
         role: {
             type: String,
             enum: data.role,

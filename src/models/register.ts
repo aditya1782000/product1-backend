@@ -2,7 +2,8 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 import data from '../../enum';
 
 export interface IRegistration extends Document {
-    userName: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phoneNumber: number;
     organisations: mongoose.Types.ObjectId[];
@@ -13,7 +14,11 @@ export interface IRegistration extends Document {
 
 const RegistartionSchema: Schema<IRegistration> = new Schema<IRegistration>(
     {
-        userName: {
+        firstName: {
+            type: String,
+            required: true,
+        },
+        lastName: {
             type: String,
             required: true,
         },

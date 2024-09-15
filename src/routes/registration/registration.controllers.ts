@@ -9,7 +9,8 @@ export const registerUserControllers = async (req: Request, res: Response) => {
     }
 
     const {
-        userName,
+        firstName,
+        lastName,
         email,
         phoneNumber,
         organisationName,
@@ -24,7 +25,8 @@ export const registerUserControllers = async (req: Request, res: Response) => {
     } = req.body;
 
     const oResponse = await registerUser(
-        userName,
+        firstName,
+        lastName,
         email,
         phoneNumber,
         organisationName,

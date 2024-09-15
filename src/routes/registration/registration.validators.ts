@@ -2,15 +2,25 @@ import { body } from 'express-validator';
 import enums from '../../../enum';
 
 export const registerUserValidators = [
-    body('userName')
+    body('firstName')
         .notEmpty()
-        .withMessage('User name is required')
+        .withMessage('First name is required')
         .bail()
         .isString()
-        .withMessage('User must be a string')
+        .withMessage('First name must be a string')
         .bail()
         .isLength({ min: 3, max: 25 })
-        .withMessage('User name must be between 3 and 25 characters'),
+        .withMessage('First name must be between 3 and 25 characters'),
+
+    body('lastName')
+        .notEmpty()
+        .withMessage('Last name is required')
+        .bail()
+        .isString()
+        .withMessage('Last name must be a string')
+        .bail()
+        .isLength({ min: 3, max: 25 })
+        .withMessage('Last name must be between 3 and 25 characters'),
 
     body('email')
         .notEmpty()

@@ -7,7 +7,8 @@ import nodemailer from '../../utils/nodemailer';
 import Organisation from '../../models/organisation';
 
 export const registerUser = async (
-    userName: string,
+    firstName: string,
+    lastName: string,
     email: string,
     phoneNumber: number,
     organisationName: string,
@@ -54,7 +55,8 @@ export const registerUser = async (
         const role = 'superAdmin';
 
         await Registration.create({
-            userName,
+            firstName,
+            lastName,
             email,
             phoneNumber,
             organisations: [organization._id],
@@ -63,7 +65,8 @@ export const registerUser = async (
         });
 
         await User.create({
-            userName,
+            firstName,
+            lastName,
             email,
             phoneNumber,
             hash,
@@ -75,7 +78,7 @@ export const registerUser = async (
             'register_user.html',
             {
                 SITE_NAME: process.env.SITE_NAME,
-                USERNAME: userName,
+                USERNAME: firstName + '' + lastName,
                 EMAIL: email,
                 PASSWORD: password,
             },

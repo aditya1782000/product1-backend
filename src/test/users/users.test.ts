@@ -20,7 +20,9 @@ jest.mock('../../utils/nodemailer', () => ({
 }));
 
 const userToken =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZTZhYjBhMGVhMWZiNThmNmUzMmI5NCIsImlhdCI6MTcyNzEwMzMyMSwiZXhwIjoxNzI3MTg5NzIxfQ.7GkTT7NQxUChJyRcYT8O5BWdw9Iqv9Rt8eeMR6oeBVI';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZTVhMTc0MzdkNDM4NmY2NjE1YzcyOSIsImlhdCI6MTcyNzI3NjUxMiwiZXhwIjoxNzI3MzYyOTEyfQ.Nl3qFpAQDaG9678VMvMHF0Dpt3BKARqEIC9r4bJyAOs';
+
+const userId: string = '66ec55fbc2935364c8caba8f';
 
 describe('ADD USERS', () => {
     beforeEach(() => jest.clearAllMocks());
@@ -807,7 +809,7 @@ describe('USERS LIST', () => {
         expect(response.body.message).toBe('Users fetched successfully');
     });
 
-    it('should return 403 if token is no given', async () => {
+    it('should return 403 if token is not given', async () => {
         const requestBody = {
             start: 0,
             length: 10,
@@ -967,5 +969,591 @@ describe('USERS LIST', () => {
 
         expect(response.status).toBe(403);
         expect(response.body.message).toBe('User is inactive');
+    });
+});
+
+describe('USER VIEW', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    afterEach(() => jest.clearAllMocks());
+
+    it('should return 200 if user is fetched', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['12345678'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock)
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue(mockUser),
+            })
+            .mockReturnValueOnce({
+                populate: jest.fn().mockReturnThis(),
+                select: jest.fn().mockReturnThis(),
+                lean: jest.fn().mockReturnValueOnce(mockUser),
+            });
+
+        const response = await request(app)
+            .get(`/api/v1/admin/user/${userId}/view`)
+            .set('authorization', `Bearer ${userToken}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('User fetched successfully');
+    });
+
+    it('should return 404 if user not found', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['12345678'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock)
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue(mockUser),
+            })
+            .mockReturnValueOnce({
+                populate: jest.fn().mockReturnThis(),
+                select: jest.fn().mockReturnThis(),
+                lean: jest.fn().mockReturnValueOnce(null),
+            });
+
+        const response = await request(app)
+            .get(`/api/v1/admin/user/${userId}/view`)
+            .set('authorization', `Bearer ${userToken}`);
+
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('User not found');
+    });
+
+    it('should return 401 if user is not authorized', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['12345678'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock)
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue(null),
+            })
+            .mockReturnValueOnce({
+                populate: jest.fn().mockReturnThis(),
+                select: jest.fn().mockReturnThis(),
+                lean: jest.fn().mockReturnValueOnce(mockUser),
+            });
+
+        const response = await request(app)
+            .get(`/api/v1/admin/user/${userId}/view`)
+            .set('authorization', `Bearer ${userToken}`);
+
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('Unauthorized access');
+    });
+
+    it('should return 403 if organization does not match', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['123456781'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock)
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue(mockUser),
+            })
+            .mockReturnValueOnce({
+                populate: jest.fn().mockReturnThis(),
+                select: jest.fn().mockReturnThis(),
+                lean: jest.fn().mockReturnValueOnce(mockUser),
+            });
+
+        const response = await request(app)
+            .get(`/api/v1/admin/user/${userId}/view`)
+            .set('authorization', `Bearer ${userToken}`);
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('User is inactive');
+    });
+
+    it('should return 403 if token is not given', async () => {
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['123456781'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock)
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue(mockUser),
+            })
+            .mockReturnValueOnce({
+                populate: jest.fn().mockReturnThis(),
+                select: jest.fn().mockReturnThis(),
+                lean: jest.fn().mockReturnValueOnce(mockUser),
+            });
+
+        const response = await request(app).get(
+            `/api/v1/admin/user/${userId}/view`,
+        );
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('Token is required');
+    });
+});
+
+describe('TOGGLE USER', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    afterEach(() => jest.clearAllMocks());
+
+    it('should return 200 if toggled successfully', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: [{ _id: '12345678' }],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock)
+            .mockReturnValueOnce({
+                select: jest.fn().mockResolvedValue(null),
+            })
+            .mockReturnValueOnce({
+                populate: jest.fn().mockReturnValueOnce(mockUser),
+            });
+
+        (User.findByIdAndUpdate as jest.Mock).mockReturnValue(mockUser);
+
+        const response = await request(app)
+            .patch(`/api/v1/admin/user/${userId}/toggle`)
+            .set('authorization', `Bearer ${userToken}`)
+            .send({});
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('User status toggled successfully');
+    });
+
+    it('should return 403 if token is not given', async () => {
+        const mockUser = {
+            _id: '123456',
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['12345678'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock)
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue(mockUser),
+            })
+            .mockReturnValueOnce({
+                populate: jest.fn().mockReturnValueOnce(mockUser),
+            });
+
+        const response = await request(app).patch(
+            `/api/v1/admin/user/${userId}/toggle`,
+        );
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('Token is required');
+    });
+
+    it('should return 401 if user is not authroized', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'suAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        (User.findById as jest.Mock).mockReturnValueOnce({
+            select: jest.fn().mockReturnValue(null),
+        });
+
+        const response = await request(app)
+            .patch(`/api/v1/admin/user/${userId}/toggle`)
+            .set('authorization', `bearer ${userToken}`);
+
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('invalid token');
+    });
+});
+
+describe('USER EDIT', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    afterEach(() => jest.clearAllMocks());
+
+    it('should return 200 if user is updated successfully', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['12345678'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock)
+            .mockResolvedValue({
+                select: jest.fn().mockReturnValue(mockUser),
+            })
+            .mockResolvedValue({
+                lean: jest.fn().mockReturnValueOnce(mockUser),
+            });
+        (User.findByIdAndUpdate as jest.Mock).mockResolvedValue(mockUser);
+
+        const requestBody = {
+            firstName: 'Jane',
+            lastName: 'Doe',
+            email: 'jane.doe@example.com',
+            role: 'subAdmin',
+            isActive: true,
+            organization: ['12345678'],
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        const response = await request(app)
+            .patch(`/api/v1/admin/user/${userId}/edit`)
+            .set('authorization', `Bearer ${userToken}`)
+            .send(requestBody);
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('User updated successfully');
+    });
+
+    it('should return 403 if token is not given', async () => {
+        const requestBody = {
+            firstName: 'Jane',
+            lastName: 'Doe',
+            email: 'jane.doe@example.com',
+            role: 'subAdmin',
+            isActive: true,
+            organization: ['12345678'],
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        const response = await request(app)
+            .patch(`/api/v1/admin/user/${userId}/edit`)
+            .send(requestBody);
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('Token is required');
+    });
+
+    it('should return 403 if unathorized access', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'suAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        (User.findById as jest.Mock).mockReturnValueOnce({
+            select: jest.fn().mockReturnValue(null),
+        });
+
+        const requestBody = {
+            firstName: 'Jane',
+            lastName: 'Doe',
+            email: 'jane.doe@example.com',
+            role: 'subAdmin',
+            isActive: true,
+            organization: ['12345678'],
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        const response = await request(app)
+            .patch(`/api/v1/admin/user/${userId}/edit`)
+            .set('authorization', `Bearer ${userToken}`)
+            .send(requestBody);
+
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('Unauthorized access');
+    });
+});
+
+describe('USER DELETE', () => {
+    beforeEach(() => jest.resetAllMocks());
+
+    afterEach(() => jest.resetAllMocks());
+
+    it('should return 200 if user is deleted successfully', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['12345678'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock).mockReturnValueOnce({
+            select: jest.fn().mockReturnValue(mockAdmin),
+        });
+        (User.findByIdAndDelete as jest.Mock).mockResolvedValue(mockUser);
+
+        const response = await request(app)
+            .delete(`/api/v1/admin/user/${userId}/delete`)
+            .set('authorization', `Bearer ${userToken}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('User deleted successfully');
+    });
+
+    it('should return 403 if token is not given', async () => {
+        const response = await request(app).delete(
+            `/api/v1/admin/user/${userId}/delete`,
+        );
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('Token is required');
+    });
+
+    it('should return 401 if unathorized access', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        (User.findById as jest.Mock).mockReturnValueOnce({
+            select: jest.fn().mockReturnValue(null),
+        });
+
+        const response = await request(app)
+            .delete(`/api/v1/admin/user/${userId}/delete`)
+            .set('authorization', `Bearer ${userToken}`);
+
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('Unauthorized access');
+    });
+
+    it('should return 404 if user not found', async () => {
+        const mockAdmin = {
+            _id: userId,
+            role: 'superAdmin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: ['12345678'],
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockUser = {
+            _id: userId,
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            role: 'suAdmin',
+            organization: ['12345678'],
+            isActive: true,
+            permissions: [
+                {
+                    eKey: 'ORDERS',
+                    eType: ['AD', 'A', 'E', 'V', 'D'],
+                },
+            ],
+        };
+
+        (User.findById as jest.Mock).mockReturnValueOnce({
+            select: jest.fn().mockReturnValue(mockUser),
+        });
+        (User.findByIdAndDelete as jest.Mock).mockResolvedValue(null);
+
+        const response = await request(app)
+            .delete(`/api/v1/admin/user/${userId}/delete`)
+            .set('authorization', `Bearer ${userToken}`);
+
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('User not found');
     });
 });

@@ -14,7 +14,7 @@ jest.mock('jsonwebtoken', () => ({
 }));
 
 const userToken =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZTZhYjBhMGVhMWZiNThmNmUzMmI5NCIsImlhdCI6MTcyNzEwMzMyMSwiZXhwIjoxNzI3MTg5NzIxfQ.7GkTT7NQxUChJyRcYT8O5BWdw9Iqv9Rt8eeMR6oeBVI';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZTVhMTc0MzdkNDM4NmY2NjE1YzcyOSIsImlhdCI6MTcyNzI3NjUxMiwiZXhwIjoxNzI3MzYyOTEyfQ.Nl3qFpAQDaG9678VMvMHF0Dpt3BKARqEIC9r4bJyAOs';
 
 describe('USER LOGIN', () => {
     beforeEach(() => jest.clearAllMocks());

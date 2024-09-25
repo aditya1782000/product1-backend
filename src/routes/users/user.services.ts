@@ -346,6 +346,7 @@ export const usersList = async (
             role,
         })
             .select(selectedFields)
+            .collation({ locale: 'en', strength: 1 })
             .sort(oData.oSortingOrder)
             .skip(start)
             .limit(limit)
@@ -402,7 +403,8 @@ export const userView = async (
 
         if (
             oUser.organization.some(
-                (org) => org._id.toString() !== organisation.toString(),
+                (org) =>
+                    org._id && org._id.toString() !== organisation.toString(),
             )
         ) {
             return {
@@ -444,6 +446,7 @@ export const userToggleStatus = async (
             'organization',
             '_id',
         );
+
         if (!oUser) {
             return {
                 statusCode: 404,
@@ -453,8 +456,10 @@ export const userToggleStatus = async (
         }
 
         if (
+            oUser.organization &&
             oUser.organization.some(
-                (org) => org._id.toString() !== organisation.toString(),
+                (org) =>
+                    org._id && org._id.toString() !== organisation.toString(),
             )
         ) {
             return {
@@ -464,9 +469,19 @@ export const userToggleStatus = async (
             };
         }
 
-        oUser.isActive = !oUser.isActive;
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { isActive: !oUser.isActive },
+            { new: true },
+        );
 
-        await oUser.save();
+        if (!updatedUser) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: 'Failed to update user status',
+            };
+        }
 
         return {
             statusCode: 200,
@@ -506,11 +521,9 @@ const updateUser = async (
         }
     }
 
-    const updateUserData = await User.findByIdAndUpdate(userId, updateUser, {
-        new: true,
-    }).populate('organization', '_id');
+    const oUser = await User.findById(userId).lean();
 
-    if (!updateUser) {
+    if (!oUser) {
         return {
             statusCode: 404,
             success: false,
@@ -519,8 +532,8 @@ const updateUser = async (
     }
 
     if (
-        updateUserData?.organization.some(
-            (org) => org._id.toString() !== organisation.toString(),
+        oUser.organization.some(
+            (org) => org._id && org._id.toString() !== organisation.toString(),
         )
     ) {
         return {
@@ -530,6 +543,17 @@ const updateUser = async (
         };
     }
 
+    const updateUserData = await User.findByIdAndUpdate(oUser._id, updateUser, {
+        new: true,
+    });
+
+    if (!updateUserData) {
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Failed to update user',
+        };
+    }
     return {
         statusCode: 200,
         success: true,
@@ -629,7 +653,8 @@ export const userDelete = async (
 
         if (
             oUser.organization.some(
-                (org) => org._id.toString() !== organisation.toString(),
+                (org) =>
+                    org._id && org._id.toString() !== organisation.toString(),
             )
         ) {
             return {

@@ -10,6 +10,15 @@ const enums = {
         'attendance',
     ],
     permissionType: ['ALL', 'A', 'E', 'D', 'V', 'AD'],
+    unitType: ['KG', 'LTR', 'MT', 'PC'],
+    supportedUploadType: [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'application/pdf',
+        'application/csv',
+        'application/msword'
+    ],
 };
 
 export default enums;

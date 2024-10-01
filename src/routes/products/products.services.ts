@@ -170,7 +170,10 @@ export const productView = async (
             };
         }
 
-        if (oProduct.organization._id.toString() !== organisation.toString()) {
+        if (
+            oProduct.organization &&
+            oProduct.organization._id.toString() !== organisation.toString()
+        ) {
             return {
                 statusCode: 403,
                 success: false,

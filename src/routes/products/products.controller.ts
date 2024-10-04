@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
     addProduct,
     customerProductList,
+    customerProductView,
     listProducts,
     productDelete,
     productEdit,
@@ -152,6 +153,26 @@ export const customerProductListController = async (
     const pinCode = (req as any).pinCode;
 
     const oResponse = await customerProductList(organization, pinCode);
+
+    return res.status(oResponse.statusCode).send({
+        ...oResponse,
+        statusCode: undefined,
+    });
+};
+
+export const customerProductViewController = async (
+    req: Request,
+    res: Response,
+) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organization = (req as any).sOrganization;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pinCode = (req as any).pinCode;
+
+    const { id } = req.body;
+
+    const oResponse = await customerProductView(id, organization, pinCode);
 
     return res.status(oResponse.statusCode).send({
         ...oResponse,

@@ -436,7 +436,7 @@ export const customerProductList = async (
                 'price.$': 1,
             },
         )
-            .select('productName')
+            .select('productName productImageUrl')
             .lean();
 
         if (!products.length) {
@@ -452,6 +452,56 @@ export const customerProductList = async (
             success: true,
             message: 'Products fetched successfully',
             data: products,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const customerProductView = async (
+    productId: string,
+    organisation: mongoose.Types.ObjectId,
+    pinCode: number,
+): Promise<AsyncResponseType> => {
+    try {
+        const product = await Product.findById(
+            {
+                _id: productId,
+                organization: { $in: organisation },
+                isActive: true,
+            },
+            {
+                price: {
+                    $elemMatch: { area: pinCode },
+                },
+            },
+        ).select('productName description howToUse productImageUrl');
+
+        if (!product) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'Product not found',
+            };
+        }
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Product fetched successfully',
+            data: product,
         };
     } catch (error: unknown) {
         if (error instanceof Error) {

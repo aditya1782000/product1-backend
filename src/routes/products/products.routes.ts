@@ -4,6 +4,7 @@ import { isAdmin } from '../../middleware/isAdmin';
 import {
     addProductsController,
     customerProductListController,
+    customerProductViewController,
     deleteProductController,
     editProductController,
     listProdutsController,
@@ -12,6 +13,7 @@ import {
 } from './products.controller';
 import {
     addProductValidators,
+    customerProductViewValidators,
     deleteProductValidators,
     editProductValidators,
     listProductsValidators,
@@ -71,5 +73,12 @@ router.get(
     '/customer/products/list',
     isCustomer(),
     customerProductListController,
+);
+
+router.get(
+    '/customer/product/view',
+    customerProductViewValidators,
+    isCustomer(),
+    customerProductViewController,
 );
 export default router;

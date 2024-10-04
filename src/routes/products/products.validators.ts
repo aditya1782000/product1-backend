@@ -210,3 +210,12 @@ export const deleteProductValidators = [
         .isMongoId()
         .withMessage('Invalid Id'),
 ];
+
+export const customerProductViewValidators = [
+    body('id')
+        .notEmpty()
+        .withMessage('Id is required')
+        .bail()
+        .isMongoId()
+        .withMessage('Invalid Id'),
+];

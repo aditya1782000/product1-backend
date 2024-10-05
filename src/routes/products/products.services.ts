@@ -487,7 +487,9 @@ export const customerProductView = async (
                     $elemMatch: { area: pinCode },
                 },
             },
-        ).select('productName description howToUse productImageUrl');
+        )
+            .select('productName description howToUse productImageUrl')
+            .lean();
 
         if (!product) {
             return {

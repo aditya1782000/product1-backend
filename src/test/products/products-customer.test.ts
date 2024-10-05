@@ -3,7 +3,6 @@ import app from '../test-env-config';
 import jwt from 'jsonwebtoken';
 import User from '../../models/user';
 import Product from '../../models/product';
-// import mongoose from 'mongoose';
 
 jest.mock('../../models/user');
 jest.mock('../../models/product');
@@ -32,7 +31,7 @@ jest.mock('mongoose', () => {
 const customerToken =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZmVlMGQ4YjA1MWNmZWFiZWE3N2FmOCIsImlhdCI6MTcyODA1NzEwMywiZXhwIjoxNzI5MzUzMTAzfQ.yrBzB4cWM_O27e1ASdyO4vUB4jtqYH7OeHcCjxItO6s';
 
-describe('List Customer Products', () => {
+describe('LIST CUSTOMER PRODUCTS', () => {
     beforeEach(() => jest.clearAllMocks());
 
     afterEach(() => jest.clearAllMocks());
@@ -303,5 +302,313 @@ describe('List Customer Products', () => {
 
         expect(response.status).toBe(404);
         expect(response.body.message).toBe('No products found');
+    });
+});
+
+describe('VIEW CUSTOMER PRODUCTS', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    afterEach(() => jest.clearAllMocks());
+
+    it('should return 200 if product fetched successfully', async () => {
+        const mockAdmin = {
+            _id: '1234',
+            role: 'customer',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: '66e6ab0a0ea1fb58f6e32b90',
+            pinCode: 123456,
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockProducts = [
+            {
+                _id: '66fee1c7b051cfeabea77b13',
+                productName: 'Test Product',
+                description: 'Test Product Description',
+                howToUse: 'Test Product How To Use',
+                productImageUrl: 'test-product-image.jpg',
+                unitType: 'KG',
+                price: [
+                    {
+                        area: '123456',
+                        prices: [
+                            { quantityType: '1-2 kg', price: 5 },
+                            { quantityType: '2-5 kg', price: 7 },
+                        ],
+                    },
+                ],
+                organization: '66e6ab0a0ea1fb58f6e32b90',
+            },
+        ];
+
+        (User.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnValue(mockAdmin),
+        });
+        (Product.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnThis(),
+            lean: jest.fn().mockResolvedValue(mockProducts),
+        });
+
+        const responseBody = {
+            id: '66fee1c7b051cfeabea77b13',
+        };
+
+        const response = await request(app)
+            .get('/api/v1/customer/product/view')
+            .send(responseBody)
+            .set('authorization', `Bearer ${customerToken}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('Product fetched successfully');
+    });
+
+    it('should return 403 if token is not given', async () => {
+        const mockAdmin = {
+            _id: '1234',
+            role: 'customer',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: '66e6ab0a0ea1fb58f6e32b90',
+            pinCode: 123456,
+        };
+
+        const mockProducts = [
+            {
+                _id: '66fee1c7b051cfeabea77b13',
+                productName: 'Test Product',
+                description: 'Test Product Description',
+                howToUse: 'Test Product How To Use',
+                productImageUrl: 'test-product-image.jpg',
+                unitType: 'KG',
+                price: [
+                    {
+                        area: '123456',
+                        prices: [
+                            { quantityType: '1-2 kg', price: 5 },
+                            { quantityType: '2-5 kg', price: 7 },
+                        ],
+                    },
+                ],
+                organization: '66e6ab0a0ea1fb58f6e32b90',
+            },
+        ];
+
+        (User.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnValue(mockAdmin),
+        });
+        (Product.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnThis(),
+            lean: jest.fn().mockResolvedValue(mockProducts),
+        });
+
+        const responseBody = {
+            id: '66fee1c7b051cfeabea77b13',
+        };
+
+        const response = await request(app)
+            .get('/api/v1/customer/product/view')
+            .send(responseBody);
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('Token is required');
+    });
+
+    it('should return 401 if unauthorized access', async () => {
+        const mockAdmin = {
+            _id: '1234',
+            role: 'customer',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: '66e6ab0a0ea1fb58f6e32b90',
+            pinCode: 123456,
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockProducts = [
+            {
+                _id: '66fee1c7b051cfeabea77b13',
+                productName: 'Test Product',
+                description: 'Test Product Description',
+                howToUse: 'Test Product How To Use',
+                productImageUrl: 'test-product-image.jpg',
+                unitType: 'KG',
+                price: [
+                    {
+                        area: '123456',
+                        prices: [
+                            { quantityType: '1-2 kg', price: 5 },
+                            { quantityType: '2-5 kg', price: 7 },
+                        ],
+                    },
+                ],
+                organization: '66e6ab0a0ea1fb58f6e32b90',
+            },
+        ];
+
+        (User.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnValue(null),
+        });
+        (Product.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnThis(),
+            lean: jest.fn().mockResolvedValue(mockProducts),
+        });
+
+        const responseBody = {
+            id: '66fee1c7b051cfeabea77b13',
+        };
+
+        const response = await request(app)
+            .get('/api/v1/customer/product/view')
+            .send(responseBody)
+            .set('authorization', `Bearer ${customerToken}`);
+
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('Unauthorized access');
+    });
+
+    it('should return 403 if customer is not active', async () => {
+        const mockAdmin = {
+            _id: '1234',
+            role: 'customer',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: false,
+            organization: '66e6ab0a0ea1fb58f6e32b90',
+            pinCode: 123456,
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockProducts = [
+            {
+                _id: '66fee1c7b051cfeabea77b13',
+                productName: 'Test Product',
+                description: 'Test Product Description',
+                howToUse: 'Test Product How To Use',
+                productImageUrl: 'test-product-image.jpg',
+                unitType: 'KG',
+                price: [
+                    {
+                        area: '123456',
+                        prices: [
+                            { quantityType: '1-2 kg', price: 5 },
+                            { quantityType: '2-5 kg', price: 7 },
+                        ],
+                    },
+                ],
+                organization: '66e6ab0a0ea1fb58f6e32b90',
+            },
+        ];
+
+        (User.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnValue(mockAdmin),
+        });
+        (Product.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnThis(),
+            lean: jest.fn().mockResolvedValue(mockProducts),
+        });
+
+        const responseBody = {
+            id: '66fee1c7b051cfeabea77b13',
+        };
+
+        const response = await request(app)
+            .get('/api/v1/customer/product/view')
+            .send(responseBody)
+            .set('authorization', `Bearer ${customerToken}`);
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('User is inactive');
+    });
+
+    it('should return 403 if role is not customer', async () => {
+        const mockAdmin = {
+            _id: '1234',
+            role: 'admin',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: '66e6ab0a0ea1fb58f6e32b90',
+            pinCode: 123456,
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        const mockProducts = [
+            {
+                _id: '66fee1c7b051cfeabea77b13',
+                productName: 'Test Product',
+                description: 'Test Product Description',
+                howToUse: 'Test Product How To Use',
+                productImageUrl: 'test-product-image.jpg',
+                unitType: 'KG',
+                price: [
+                    {
+                        area: '123456',
+                        prices: [
+                            { quantityType: '1-2 kg', price: 5 },
+                            { quantityType: '2-5 kg', price: 7 },
+                        ],
+                    },
+                ],
+                organization: '66e6ab0a0ea1fb58f6e32b90',
+            },
+        ];
+
+        (User.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnValue(mockAdmin),
+        });
+        (Product.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnThis(),
+            lean: jest.fn().mockResolvedValue(mockProducts),
+        });
+
+        const responseBody = {
+            id: '66fee1c7b051cfeabea77b13',
+        };
+
+        const response = await request(app)
+            .get('/api/v1/customer/product/view')
+            .send(responseBody)
+            .set('authorization', `Bearer ${customerToken}`);
+
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('Unauthorized access');
+    });
+
+    it('should return 404 if product is not found', async () => {
+        const mockAdmin = {
+            _id: '1234',
+            role: 'customer',
+            email: 'admin@example.com',
+            permissions: [],
+            isActive: true,
+            organization: '66e6ab0a0ea1fb58f6e32b91',
+            pinCode: 123456,
+        };
+
+        (jwt.verify as jest.Mock).mockResolvedValue(mockAdmin);
+
+        (User.findById as jest.Mock).mockReturnValue({
+            select: jest.fn().mockReturnValue(mockAdmin),
+        });
+
+        const responseBody = {
+            id: '66fee1c7b051cfeabea77b14',
+        };
+
+        const response = await request(app)
+            .get('/api/v1/customer/product/view')
+            .send(responseBody)
+            .set('authorization', `Bearer ${customerToken}`);
+
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('Product not found');
     });
 });

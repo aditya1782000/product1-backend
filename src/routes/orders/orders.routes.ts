@@ -2,9 +2,15 @@ import express from 'express';
 import { isCustomer } from '../../middleware/isCustomer';
 import {
     createCustomerOrderController,
+    listCompletedOrdersControllers,
+    listPendingOrdersControllers,
     receiveCustomerOrdersControllers,
 } from './orders.controllers';
-import { createCustomerOrderValidators } from './orders.validators';
+import {
+    createCustomerOrderValidators,
+    listCompletedOrdersValidators,
+    listPendingOrdersValidators,
+} from './orders.validators';
 import { isAdmin } from '../../middleware/isAdmin';
 
 const router = express.Router();
@@ -16,11 +22,25 @@ router.get(
     receiveCustomerOrdersControllers,
 );
 
+router.get(
+    '/admin/orders/pending/list',
+    listPendingOrdersValidators,
+    isAdmin('orders', 'V'),
+    listPendingOrdersControllers,
+);
+
+router.get(
+    '/admin/orders/completed/list',
+    listCompletedOrdersValidators,
+    isAdmin('orders', 'V'),
+    listCompletedOrdersControllers,
+);
+
 // Customer APIs
 router.post(
     '/customer/order/create',
-    isCustomer(),
     createCustomerOrderValidators,
+    isCustomer(),
     createCustomerOrderController,
 );
 

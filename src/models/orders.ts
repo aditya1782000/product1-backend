@@ -46,7 +46,7 @@ const orderSchema: Schema<IOrder> = new Schema<IOrder>(
     {
         customer: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'customer',
+            ref: 'users',
         },
         orderItems: [orderItemSchema],
         totalAmount: {

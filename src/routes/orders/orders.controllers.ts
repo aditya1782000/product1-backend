@@ -28,10 +28,13 @@ export const createCustomerOrderController = async (
 };
 
 export const receiveCustomerOrdersControllers = async (
-    _req: Request,
+    req: Request,
     res: Response,
 ) => {
-    const oResponse = await recieveCustomerOrders();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organization = (req as any).sOrganization;
+
+    const oResponse = await recieveCustomerOrders(organization);
 
     return res.status(oResponse.statusCode).send({
         ...oResponse,

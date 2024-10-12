@@ -37,7 +37,7 @@ export const createCustomerOrder = async (
             messages: [
                 {
                     value: JSON.stringify(order),
-                    partition: 0,
+                    key: order.organization.toString(),
                 },
             ],
         });
@@ -67,10 +67,14 @@ export const createCustomerOrder = async (
     }
 };
 
-export const recieveCustomerOrders = async (): Promise<AsyncResponseType> => {
+export const recieveCustomerOrders = async (
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
     try {
         const consumer = myKafka.consumer({
-            groupId: process.env.GROUP_ID || '',
+            groupId: `${process.env.GROUP_ID || 'order'}-${organisation}`,
+            sessionTimeout: 30000,
+            heartbeatInterval: 3000,
         });
         await consumer.connect();
 
@@ -81,10 +85,15 @@ export const recieveCustomerOrders = async (): Promise<AsyncResponseType> => {
 
         await consumer.run({
             eachMessage: async ({ message }) => {
-                const orderData = JSON.parse(message.value?.toString() || '');
+                const orderData = JSON.parse(`${message.value}` || '');
 
-                const newOrder = new Order(orderData);
-                await newOrder.save();
+                if (
+                    orderData.organization.toString() ===
+                    organisation.toString()
+                ) {
+                    const newOrder = new Order(orderData);
+                    await newOrder.save();
+                }
             },
         });
 

@@ -1,7 +1,11 @@
 import { Server } from 'socket.io';
 import { Server as HttpServer } from 'http';
 
-export const createSocketServer = (httpServer: HttpServer) => {    
+declare global {
+    var io: Server;
+}
+
+export const createSocketServer = (httpServer: HttpServer) => {
     const io = new Server(httpServer, {
         cors: {
             origin: '*',
@@ -10,6 +14,8 @@ export const createSocketServer = (httpServer: HttpServer) => {
             credentials: true,
         },
     });
+
+    global.io = io;
 
     io.on('connection', (socket) => {
         socket.on('disconnect', () => {

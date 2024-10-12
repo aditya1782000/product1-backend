@@ -19,7 +19,7 @@ const enums = {
         'application/csv',
         'application/msword',
     ],
-    orderStatus: ['inApproval', 'approve', 'rejected', 'delivered'],
+    orderStatus: ['inApproval', 'approved', 'rejected', 'delivered'],
     orderType: ['customer', 'admin'],
 };
 

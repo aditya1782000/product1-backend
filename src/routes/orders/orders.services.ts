@@ -85,14 +85,18 @@ export const recieveCustomerOrders = async (
 
         await consumer.run({
             eachMessage: async ({ message }) => {
-                const orderData = JSON.parse(`${message.value}` || '');
+                try {
+                    const orderData = JSON.parse(`${message.value}` || '');
 
-                if (
-                    orderData.organization.toString() ===
-                    organisation.toString()
-                ) {
-                    const newOrder = new Order(orderData);
-                    await newOrder.save();
+                    if (
+                        orderData.organization.toString() ===
+                        organisation.toString()
+                    ) {
+                        const newOrder = new Order(orderData);
+                        await newOrder.save();
+                    }
+                } catch (error) {
+                    console.error(error);
                 }
             },
         });

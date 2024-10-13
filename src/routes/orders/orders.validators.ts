@@ -24,7 +24,7 @@ export const createCustomerOrderValidators = [
         .notEmpty()
         .withMessage('Quantity type is required')
         .bail()
-        .isIn(enums.unitType)
+        .isString()
         .withMessage('Invalid quantity type'),
 
     body('orderItems.*.unitPrice')
@@ -199,4 +199,48 @@ export const viewCustomerOrderValidators = [
         .bail()
         .isMongoId()
         .withMessage('Invalid Id'),
+];
+
+export const editOrderValidators = [
+    body('orderItems.*.product')
+        .notEmpty()
+        .withMessage('Prodcut is required')
+        .bail()
+        .isMongoId()
+        .withMessage('Invalid product'),
+
+    body('orderItems.*.quantity')
+        .notEmpty()
+        .withMessage('Product quantity is required')
+        .bail()
+        .isNumeric()
+        .withMessage('Qauntity must be a number'),
+
+    body('orderItems.*.quantityType')
+        .notEmpty()
+        .withMessage('Quantity type is required')
+        .bail()
+        .isString()
+        .withMessage('Invalid quantity type'),
+
+    body('orderItems.*.unitPrice')
+        .notEmpty()
+        .withMessage('Unit price is required')
+        .bail()
+        .isNumeric()
+        .withMessage('Unit price must be a number'),
+
+    body('orderItems.*.totalPrice')
+        .notEmpty()
+        .withMessage('Total price is required')
+        .bail()
+        .isNumeric()
+        .withMessage('Total price must be a number'),
+
+    body('totalAmount')
+        .notEmpty()
+        .withMessage('Total amount is required')
+        .bail()
+        .isNumeric()
+        .withMessage('Total amount must be a number'),
 ];

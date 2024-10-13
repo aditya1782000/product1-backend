@@ -2,6 +2,7 @@ import express from 'express';
 import { isCustomer } from '../../middleware/isCustomer';
 import {
     createCustomerOrderController,
+    editOrderControllers,
     listCompletedOrdersControllers,
     listCustomerCompletedOrdersControllers,
     listCustomerPendingOrdersControllers,
@@ -12,6 +13,7 @@ import {
 } from './orders.controllers';
 import {
     createCustomerOrderValidators,
+    editOrderValidators,
     listCompletedOrdersValidators,
     listPendingOrdersValidators,
     viewAdminOrderValidators,
@@ -47,6 +49,13 @@ router.get(
     viewAdminOrderValidators,
     isAdmin('orders', 'V'),
     viewAdminOrderControllers,
+);
+
+router.patch(
+    '/admin/order/:id/edit',
+    editOrderValidators,
+    isAdmin('orders', 'E'),
+    editOrderControllers,
 );
 
 // Customer APIs

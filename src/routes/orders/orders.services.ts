@@ -240,7 +240,7 @@ export const listCompletedOrders = async (
 
         const orderQuery = {
             ...oOrderData.oSearchData,
-            status: { $in : ['approved', 'rejected', 'delivered']},
+            status: { $in: ['approved', 'rejected', 'delivered'] },
             organization: { $in: [organisation] },
             customer: {
                 $in: await User.find(oCustomerData.oSearchData).select('_id'),
@@ -251,7 +251,7 @@ export const listCompletedOrders = async (
 
         const orders = await Order.find(orderQuery)
             .populate('customer', '_id firstName lastName phoneNumber')
-            .select('totalAmount dCreatedAt status')
+            .select('totalAmount dCreatedAt dUpdatedAt status')
             .collation({ locale: 'en', strength: 1 })
             .sort(oOrderData.oSortingOrder)
             .skip(start)
@@ -274,6 +274,94 @@ export const listCompletedOrders = async (
             draw: req.body.draw,
             recordsTotal: nRecordsTotal,
             recordsFiltered: nRecordsTotal,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const listCustomerPendingOrders = async (
+    customer: mongoose.Types.ObjectId,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const orders = await Order.find({
+            customer: { $in: customer },
+            status: 'inApproval',
+            organization: { $in: organisation },
+        })
+            .select('status totalAmount dCreatedAt dUpdatedAt deliveredAt')
+            .lean();
+
+        if (!orders.length) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'No pending orders found for this customer',
+            };
+        }
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Customer pending orders retrieved successfully',
+            data: orders,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const listCustomerCompletedOrders = async (
+    customer: mongoose.Types.ObjectId,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const orders = await Order.find({
+            customer: { $in: customer },
+            status: { $in: ['approved', 'rejected', 'delivered'] },
+            organization: { $in: organisation },
+        })
+            .select('status totalAmount dCreatedAt dUpdatedAt deliveredAt')
+            .lean();
+
+        if (!orders.length) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'No Completed orders found for this customer',
+            };
+        }
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Customer Completed orders retrieved successfully',
+            data: orders,
         };
     } catch (error: unknown) {
         if (error instanceof Error) {

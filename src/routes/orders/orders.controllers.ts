@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import {
     createCustomerOrder,
     listCompletedOrders,
+    listCustomerCompletedOrders,
+    listCustomerPendingOrders,
     listPendingOrders,
     recieveCustomerOrders,
 } from './orders.services';
@@ -81,6 +83,40 @@ export const listCompletedOrdersControllers = async (
         limit,
         organization,
     );
+
+    return res.status(oResponse.statusCode).send({
+        ...oResponse,
+        statusCode: undefined,
+    });
+};
+
+export const listCustomerPendingOrdersControllers = async (
+    req: Request,
+    res: Response,
+) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const customer = (req as any).userId;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organization = (req as any).sOrganization;
+
+    const oResponse = await listCustomerPendingOrders(customer, organization);
+
+    return res.status(oResponse.statusCode).send({
+        ...oResponse,
+        statusCode: undefined,
+    });
+};
+
+export const listCustomerCompletedOrdersControllers = async (
+    req: Request,
+    res: Response,
+) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const customer = (req as any).userId;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organization = (req as any).sOrganization;
+
+    const oResponse = await listCustomerCompletedOrders(customer, organization);
 
     return res.status(oResponse.statusCode).send({
         ...oResponse,

@@ -3,6 +3,8 @@ import { isCustomer } from '../../middleware/isCustomer';
 import {
     createCustomerOrderController,
     listCompletedOrdersControllers,
+    listCustomerCompletedOrdersControllers,
+    listCustomerPendingOrdersControllers,
     listPendingOrdersControllers,
     receiveCustomerOrdersControllers,
 } from './orders.controllers';
@@ -42,6 +44,18 @@ router.post(
     createCustomerOrderValidators,
     isCustomer(),
     createCustomerOrderController,
+);
+
+router.get(
+    '/customer/orders/pending/list',
+    isCustomer(),
+    listCustomerPendingOrdersControllers,
+);
+
+router.get(
+    '/customer/orders/completed/list',
+    isCustomer(),
+    listCustomerCompletedOrdersControllers,
 );
 
 export default router;

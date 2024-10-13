@@ -387,10 +387,10 @@ export const viewAdminOrder = async (
     organisation: mongoose.Types.ObjectId,
 ): Promise<AsyncResponseType> => {
     try {
-        const oProduct = await Order.findById({
+        const oOrder = await Order.findById({
             _id: orderId,
-            organization: { $in: organisation },
         })
+            .populate('organization', ' _id')
             .populate(
                 'customer',
                 '_id firstName lastName phoneNumber addressLineOne addressLineTwo city state pinCode',
@@ -401,7 +401,7 @@ export const viewAdminOrder = async (
             )
             .lean();
 
-        if (!oProduct) {
+        if (!oOrder) {
             return {
                 statusCode: 404,
                 success: false,
@@ -409,11 +409,22 @@ export const viewAdminOrder = async (
             };
         }
 
+        if (
+            oOrder.organization &&
+            oOrder.organization._id.toString() !== organisation.toString()
+        ) {
+            return {
+                statusCode: 403,
+                success: false,
+                message: 'Unauthorized access',
+            };
+        }
+
         return {
             statusCode: 200,
             success: true,
             message: 'Order retrieved successfully',
-            data: oProduct,
+            data: oOrder,
         };
     } catch (error: unknown) {
         if (error instanceof Error) {
@@ -437,10 +448,10 @@ export const viewCustomerOrder = async (
     organisation: mongoose.Types.ObjectId,
 ): Promise<AsyncResponseType> => {
     try {
-        const oProduct = await Order.findById({
+        const oOrder = await Order.findById({
             _id: orderId,
-            organization: { $in: organisation },
         })
+            .populate('organization', '_id')
             .populate(
                 'customer',
                 '_id firstName lastName phoneNumber addressLineOne addressLineTwo city state pinCode',
@@ -452,7 +463,7 @@ export const viewCustomerOrder = async (
             .sort({ dCreatedAt: -1 })
             .lean();
 
-        if (!oProduct) {
+        if (!oOrder) {
             return {
                 statusCode: 404,
                 success: false,
@@ -460,11 +471,91 @@ export const viewCustomerOrder = async (
             };
         }
 
+        if (
+            oOrder.organization &&
+            oOrder.organization._id.toString() !== organisation.toString()
+        ) {
+            return {
+                statusCode: 403,
+                success: false,
+                message: 'Unauthorized access',
+            };
+        }
+
         return {
             statusCode: 200,
             success: true,
             message: 'Order retrieved successfully',
-            data: oProduct,
+            data: oOrder,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const editOrder = async (
+    orderId: string,
+    organisation: mongoose.Types.ObjectId,
+    updateItems?: OrderItems[],
+    totalAmount?: number,
+): Promise<AsyncResponseType> => {
+    try {
+        const oOrder = await Order.findById({
+            _id: orderId,
+        }).populate('organization', '_id');
+
+        if (!oOrder) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'Order not found',
+            };
+        }
+
+        if (
+            oOrder.organization &&
+            oOrder.organization._id.toString() !== organisation.toString()
+        ) {
+            return {
+                statusCode: 403,
+                success: false,
+                message: 'Unauthorized access',
+            };
+        }
+
+        const updateOrder = await Order.findByIdAndUpdate(
+            oOrder._id,
+            {
+                orderItems: updateItems,
+                totalAmount: totalAmount,
+            },
+            { new: true },
+        );
+
+        if (!updateOrder) {
+            return {
+                statusCode: 400,
+                success: false,
+                message: 'Failed to update order',
+            };
+        }
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Order updated successfully',
         };
     } catch (error: unknown) {
         if (error instanceof Error) {

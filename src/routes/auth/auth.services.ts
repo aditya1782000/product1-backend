@@ -161,6 +161,7 @@ export const verifyOtp = async (
                 email: oUser.email || '',
                 firstName: oUser.firstName || '',
                 lastName: oUser.lastName || '',
+                phoneNumber: oUser.phoneNumber || '',
                 role: oUser.role || '',
                 permissions: oUser.permissions || '',
                 organization: oUser.organization || '',

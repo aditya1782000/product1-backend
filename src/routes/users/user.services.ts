@@ -402,7 +402,7 @@ export const userView = async (
 ): Promise<AsyncResponseType> => {
     try {
         const selectedFields =
-            'firstName lastName email phoneNumber role permisssions isActive addressLineOne addressLineTwo city state pinCode';
+            'firstName lastName email phoneNumber role permissions isActive addressLineOne addressLineTwo city state pinCode';
 
         const oUser = await User.findById({
             _id: userId,
@@ -528,9 +528,11 @@ const updateUser = async (
     updateUser: UpdateUserOption,
     organisation: mongoose.Types.ObjectId[],
 ): Promise<AsyncResponseType> => {
-    if (updateUser.email) {
-        const existingUser = await User.findOne({ email: updateUser.email });
-        if (existingUser && existingUser._id !== userId) {
+    const oUser = await User.findById(userId).lean();
+
+    if (updateUser.email && updateUser.email !== oUser?.email) {
+        const emailInUse = await User.findOne({ email: updateUser.email });
+        if (emailInUse) {
             return {
                 statusCode: 409,
                 success: false,
@@ -538,8 +540,6 @@ const updateUser = async (
             };
         }
     }
-
-    const oUser = await User.findById(userId).lean();
 
     if (!oUser) {
         return {
@@ -633,6 +633,11 @@ export const userEdit = async (
                     email,
                     phoneNumber,
                     permissions,
+                    addressLineOne,
+                    addressLineTwo,
+                    city,
+                    state,
+                    pinCode,
                 },
                 organisation,
             );

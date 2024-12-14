@@ -3,8 +3,36 @@ import { AsyncResponseType } from '../../types/async';
 import { myKafka } from '../../utils/kafka';
 import Order from '../../models/orders';
 import { Request } from 'express';
-import dataTable from '../../utils/dataTable';
 import User from '../../models/user';
+
+interface Filter {
+    status?: string;
+    from?: string;
+    to?: string;
+}
+
+const createFilterQuery = (filter: Filter) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const query: any = {};
+
+    if (filter.status) {
+        query.status = filter.status;
+    }
+
+    if (filter.from || filter.to) {
+        query.dCreatedAt = {};
+
+        if (filter.from) {
+            query.dCreatedAt.$gte = new Date(filter.from);
+        }
+
+        if (filter.to) {
+            query.dCreatedAt.$lte = new Date(filter.to);
+        }
+    }
+
+    return query;
+};
 
 interface OrderItems {
     product: mongoose.Types.ObjectId;
@@ -160,38 +188,16 @@ export const listPendingOrders = async (
     req: Request,
     start: number,
     limit: number,
+    filter: Filter,
     organisation: mongoose.Types.ObjectId,
 ): Promise<AsyncResponseType> => {
     try {
-        const customerSearchFields = ['firstName', 'lastName'];
-
-        const customerNumberFields = ['phoneNumber'];
-
-        const orderSearchFields = ['status'];
-
-        const orderNumberFields = ['totalAmount'];
-
-        const oCustomerData = dataTable.initDataTable(
-            req.body,
-            customerSearchFields,
-            'srNo',
-            customerNumberFields,
-        );
-
-        const oOrderData = dataTable.initDataTable(
-            req.body,
-            orderSearchFields,
-            'srNo',
-            orderNumberFields,
-        );
+        const filterQuery = createFilterQuery(filter);
 
         const orderQuery = {
-            ...oOrderData.oSearchData,
+            $and: [filterQuery],
             status: 'inApproval',
             organization: { $in: [organisation] },
-            customer: {
-                $in: await User.find(oCustomerData.oSearchData).select('_id'),
-            },
         };
 
         const nRecordsTotal = await Order.countDocuments(orderQuery);
@@ -200,7 +206,7 @@ export const listPendingOrders = async (
             .populate('customer', '_id firstName lastName phoneNumber')
             .select('totalAmount dCreatedAt status orderNumber')
             .collation({ locale: 'en', strength: 1 })
-            .sort(oOrderData.oSortingOrder)
+            .sort({ dCreatedAt: -1 })
             .skip(start)
             .limit(limit)
             .lean();
@@ -243,38 +249,16 @@ export const listCompletedOrders = async (
     req: Request,
     start: number,
     limit: number,
+    filter: Filter,
     organisation: mongoose.Types.ObjectId,
 ): Promise<AsyncResponseType> => {
     try {
-        const customerSearchFields = ['firstName', 'lastName'];
-
-        const customerNumberFields = ['phoneNumber'];
-
-        const orderSearchFields = ['status'];
-
-        const orderNumberFields = ['totalAmount'];
-
-        const oCustomerData = dataTable.initDataTable(
-            req.body,
-            customerSearchFields,
-            'srNo',
-            customerNumberFields,
-        );
-
-        const oOrderData = dataTable.initDataTable(
-            req.body,
-            orderSearchFields,
-            'srNo',
-            orderNumberFields,
-        );
+        const filterQuery = createFilterQuery(filter);
 
         const orderQuery = {
-            ...oOrderData.oSearchData,
+            $and: [filterQuery],
             status: { $in: ['approved', 'rejected', 'delivered'] },
             organization: { $in: [organisation] },
-            customer: {
-                $in: await User.find(oCustomerData.oSearchData).select('_id'),
-            },
         };
 
         const nRecordsTotal = await Order.countDocuments(orderQuery);
@@ -283,7 +267,7 @@ export const listCompletedOrders = async (
             .populate('customer', '_id firstName lastName phoneNumber')
             .select('totalAmount dCreatedAt dUpdatedAt status orderNumber')
             .collation({ locale: 'en', strength: 1 })
-            .sort(oOrderData.oSortingOrder)
+            .sort({ dCreatedAt: -1 })
             .skip(start)
             .limit(limit)
             .lean();

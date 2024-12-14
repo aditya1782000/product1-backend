@@ -78,17 +78,6 @@ export const listPendingOrdersValidators = [
         .isNumeric()
         .withMessage('Invalid draw value'),
 
-    body('search')
-        .notEmpty()
-        .notEmpty()
-        .withMessage('Search is required')
-        .bail()
-        .isObject()
-        .withMessage('Search must be an object')
-        .bail()
-        .custom((value) => value.hasOwnProperty('value'))
-        .withMessage('Search object must contain a value key'),
-
     body('columns')
         .notEmpty()
         .withMessage('Columns is required')
@@ -137,17 +126,6 @@ export const listCompletedOrdersValidators = [
         .bail()
         .isNumeric()
         .withMessage('Invalid draw value'),
-
-    body('search')
-        .notEmpty()
-        .notEmpty()
-        .withMessage('Search is required')
-        .bail()
-        .isObject()
-        .withMessage('Search must be an object')
-        .bail()
-        .custom((value) => value.hasOwnProperty('value'))
-        .withMessage('Search object must contain a value key'),
 
     body('columns')
         .notEmpty()

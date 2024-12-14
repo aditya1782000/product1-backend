@@ -402,7 +402,7 @@ export const userView = async (
 ): Promise<AsyncResponseType> => {
     try {
         const selectedFields =
-            'firstName lastName email phoneNumber role permissions isActive addressLineOne addressLineTwo city state pinCode';
+            'firstName lastName email phoneNumber role permissions type isActive addressLineOne addressLineTwo city state pinCode';
 
         const oUser = await User.findById({
             _id: userId,

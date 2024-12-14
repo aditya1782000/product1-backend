@@ -65,8 +65,15 @@ export const listPendingOrdersControllers = async (
 
     const offSet = Number(req.body.start);
     const limit = Number(req.body.length);
+    const { filter } = req.body;
 
-    const oResponse = await listPendingOrders(req, offSet, limit, organization);
+    const oResponse = await listPendingOrders(
+        req,
+        offSet,
+        limit,
+        filter,
+        organization,
+    );
 
     return res.status(oResponse.statusCode).send({
         ...oResponse,
@@ -83,11 +90,13 @@ export const listCompletedOrdersControllers = async (
 
     const offSet = Number(req.body.start);
     const limit = Number(req.body.length);
+    const { filter } = req.body;
 
     const oResponse = await listCompletedOrders(
         req,
         offSet,
         limit,
+        filter,
         organization,
     );
 

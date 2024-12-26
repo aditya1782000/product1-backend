@@ -291,15 +291,13 @@ export const createAdminOrdersValidators = [
         .withMessage('Total amount must be a number'),
 
     body('status')
-        .notEmpty()
-        .withMessage('status is required')
+        .optional()
         .bail()
         .isIn(enums.orderStatus)
         .withMessage('Invalid status'),
 
     body('type')
-        .notEmpty()
-        .withMessage('Order type is required')
+        .optional()
         .bail()
         .isIn(enums.orderType)
         .withMessage('Invalid order type'),

@@ -1111,7 +1111,9 @@ export const customerList = async (
             role: 'customer',
             organization: { $in: organisation },
         })
-            .select('_id firstName lastName')
+            .select(
+                '_id firstName lastName phoneNumber type addressLineOne addressLineTwo city state pinCode',
+            )
             .lean();
 
         return {
@@ -1144,17 +1146,13 @@ export const productsList = async (
     try {
         const searchFields = ['productName'];
 
-        const oData = dataTable.initDataTable(
-            req.body,
-            searchFields,
-            'srNo',
-        );
+        const oData = dataTable.initDataTable(req.body, searchFields, 'srNo');
 
         const products = await Product.find({
             $and: [oData.oSearchData],
             organization: { $in: organisation },
         })
-            .select('_id productName productImageUrl')
+            .select('_id productName productImageUrl price')
             .lean();
 
         return {

@@ -486,7 +486,7 @@ export const viewAdminOrder = async (
             )
             .populate('orderItems.product', 'productName productImageUrl')
             .select(
-                'orderItems totalAmount status type deliveredAt dCreatedAt dUpdatedAt orderNumber',
+                'orderItems totalAmount status type deliveredAt dCreatedAt dUpdatedAt orderNumber invoiceUrl',
             )
             .lean();
 

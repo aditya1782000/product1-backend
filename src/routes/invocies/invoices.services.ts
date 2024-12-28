@@ -172,6 +172,14 @@ export const addOrderInvoice = async (
             };
         }
 
+        if (oOrder.status !== 'delivered') {
+            return {
+                statusCode: 400,
+                success: false,
+                message: 'Order must be delivered to add an invoice',
+            };
+        }
+
         if (req.file) {
             invoiceFilePath = req.file.path;
             const uploadData = await uploadFileToS3(

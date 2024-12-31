@@ -60,7 +60,9 @@ export const orderStatusCountControllers = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organization = (req as any).sOrganization;
 
-    const oResponse = await orderDeliveryStatusCount(organization);
+    const { year } = req.body;
+
+    const oResponse = await orderDeliveryStatusCount(year, organization);
 
     return res.status(oResponse.statusCode).send({
         ...oResponse,

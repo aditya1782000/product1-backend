@@ -165,10 +165,12 @@ export const orderCountsMonthYear = async (
 };
 
 export const orderDeliveryStatusCount = async (
+    year: string,
     organisation: mongoose.Types.ObjectId,
 ): Promise<AsyncResponseType> => {
     try {
-        const curretDate = new Date();
+        const start = new Date(`${year}-01-01`);
+        const end = new Date(`${parseInt(year) + 1}-01-01`);
 
         const [deliveredOrders, approvedOrders, pendingOrders] =
             await Promise.all([
@@ -176,21 +178,24 @@ export const orderDeliveryStatusCount = async (
                     status: 'delivered',
                     organization: { $in: [organisation] },
                     dCreatedAt: {
-                        $gte: new Date(curretDate.getFullYear(), 0, 1),
+                        $gte: start,
+                        $lt: end,
                     },
                 }),
                 Order.countDocuments({
                     status: 'approved',
                     organization: { $in: [organisation] },
                     dCreatedAt: {
-                        $gte: new Date(curretDate.getFullYear(), 0, 1),
+                        $gte: start,
+                        $lt: end,
                     },
                 }),
                 Order.countDocuments({
                     status: 'pending',
                     organization: { $in: [organisation] },
                     dCreatedAt: {
-                        $gte: new Date(curretDate.getFullYear(), 0, 1),
+                        $gte: start,
+                        $lt: end,
                     },
                 }),
             ]);

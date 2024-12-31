@@ -29,7 +29,7 @@ router.post(
     orderCountsMonthYearControllers,
 );
 
-router.get(
+router.post(
     '/admin/dashboard/orders/status/count',
     isAdmin(),
     orderStatusCountControllers,

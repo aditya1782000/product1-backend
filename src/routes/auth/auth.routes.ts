@@ -1,5 +1,7 @@
 import express from 'express';
 import {
+    customerLoginController,
+    customerOptVerifyController,
     resendOtpControllers,
     userChangePasswordController,
     userLoginController,
@@ -61,6 +63,18 @@ router.post(
     userChangePasswordValidator,
     validateOnlyAdmin(),
     userChangePasswordController,
+);
+
+router.post(
+    '/customer/user/login',
+    userLoginValidator,
+    customerLoginController,
+);
+
+router.post(
+    '/customer/user/verify/otp',
+    verifyOtpValidators,
+    customerOptVerifyController,
 );
 
 export default router;

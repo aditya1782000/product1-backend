@@ -3,6 +3,7 @@ import {
     customerLoginController,
     customerOptVerifyController,
     resendOtpControllers,
+    resentVerifyCustomerOtpController,
     userChangePasswordController,
     userLoginController,
     userLogoutController,
@@ -75,6 +76,12 @@ router.post(
     '/customer/user/verify/otp',
     verifyOtpValidators,
     customerOptVerifyController,
+);
+
+router.post(
+    '/customer/user/resend/otp',
+    resendOtpValidators,
+    resentVerifyCustomerOtpController,
 );
 
 export default router;

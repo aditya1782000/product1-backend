@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import {
     customerLogin,
+    resendCustomerOtp,
     resendOtp,
     userChangePassword,
     userLogin,
@@ -177,6 +178,24 @@ export const customerOptVerifyController = async (
     const { email, otp } = req.body;
 
     const oResponse = await verifyCustomerOtp(email, otp);
+
+    return res
+        .status(oResponse.statusCode)
+        .send({ ...oResponse, statusCode: undefined });
+};
+
+export const resentVerifyCustomerOtpController = async (
+    req: Request,
+    res: Response,
+) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+
+    const oResponse = await resendCustomerOtp(email);
 
     return res
         .status(oResponse.statusCode)

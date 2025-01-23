@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import {
+    customerLogin,
+    resendCustomerOtp,
     resendOtp,
     userChangePassword,
     userLogin,
@@ -7,6 +9,7 @@ import {
     userPasswordReset,
     userReserPasswordPost,
     userResetPasswordGet,
+    verifyCustomerOtp,
     verifyOtp,
 } from './auth.services';
 import { validationResult } from 'express-validator';
@@ -142,6 +145,57 @@ export const userChangePasswordController = async (
         newPassword,
         confirmPassword,
     );
+
+    return res
+        .status(oResponse.statusCode)
+        .send({ ...oResponse, statusCode: undefined });
+};
+
+export const customerLoginController = async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    const oResponse = await customerLogin(email, password);
+
+    return res
+        .status(oResponse.statusCode)
+        .send({ ...oResponse, statusCode: undefined });
+};
+
+export const customerOptVerifyController = async (
+    req: Request,
+    res: Response,
+) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, otp } = req.body;
+
+    const oResponse = await verifyCustomerOtp(email, otp);
+
+    return res
+        .status(oResponse.statusCode)
+        .send({ ...oResponse, statusCode: undefined });
+};
+
+export const resentVerifyCustomerOtpController = async (
+    req: Request,
+    res: Response,
+) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+
+    const oResponse = await resendCustomerOtp(email);
 
     return res
         .status(oResponse.statusCode)

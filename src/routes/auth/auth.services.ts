@@ -402,6 +402,9 @@ export const userReserPasswordPost = async (
             statusCode: 200,
             success: true,
             message: 'Password has been reset successfully',
+            data: {
+                role: oUser.role,
+            },
         };
     } catch (error: unknown) {
         if (error instanceof Error) {
@@ -495,6 +498,256 @@ export const userChangePassword = async (
             statusCode: 200,
             success: true,
             message: 'Password has been changed successfully',
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const customerLogin = async (
+    email: string,
+    password: string,
+): Promise<AsyncResponseType> => {
+    try {
+        const oUser = await User.findOne({ email });
+
+        if (!oUser) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'User not found',
+            };
+        }
+
+        if (oUser.isActive === false) {
+            return {
+                statusCode: 406,
+                success: false,
+                message: 'User is not active',
+            };
+        }
+
+        if (oUser.role === 'superAdmin' || oUser.role === 'subAdmin') {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'User not found',
+            };
+        }
+
+        const passwordMatch: boolean = await bcrypt.compare(
+            password,
+            oUser.hash,
+        );
+
+        if (!passwordMatch) {
+            return {
+                statusCode: 406,
+                success: false,
+                message: 'Invalid password',
+            };
+        }
+
+        const otpGenerate: number = parseInt(
+            otpGenerator
+                .generate(4, {
+                    upperCaseAlphabets: false,
+                    specialChars: false,
+                    digits: true,
+                    lowerCaseAlphabets: false,
+                })
+                .padStart(4, '0'),
+            10,
+        );
+
+        const otpExpires = Date.now() + 5 * 60 * 1000;
+
+        oUser.otp = otpGenerate;
+        oUser.otpExpires = otpExpires;
+
+        await oUser.save();
+
+        await nodemailer.send(
+            'send_otp.html',
+            {
+                SITENAME: process.env.SITE_NAME,
+                OTP: otpGenerate,
+            },
+            {
+                from: process.env.SMTP_USERNAME,
+                to: oUser.email,
+                subject: '`OTP Verification',
+            },
+        );
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Otp send successfully to your email',
+            data: { email },
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const verifyCustomerOtp = async (
+    email: string,
+    otp: number,
+): Promise<AsyncResponseType> => {
+    try {
+        let token: string = '';
+
+        const oUser = await User.findOne({ email }).populate(
+            'organization',
+            'organisationName gstNumber addressLineone addressLineTwo city state pinCode',
+        );
+
+        if (!oUser) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'User not found',
+            };
+        }
+
+        if (!oUser.otp || !oUser.otpExpires) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'OTP not found',
+            };
+        }
+
+        if (Date.now() > oUser.otpExpires) {
+            return {
+                statusCode: 406,
+                success: false,
+                message: 'OTP expired',
+            };
+        }
+
+        if (otp !== oUser.otp) {
+            return {
+                statusCode: 406,
+                success: false,
+                message: 'Invalid OTP',
+            };
+        }
+
+        token = jwt.sign({ id: oUser._id }, jwtSecret as string, {
+            expiresIn: process.env.JWT_EXPIRES_IN as string,
+        });
+
+        oUser.otp = undefined;
+        oUser.otpExpires = undefined;
+        await oUser.save();
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Otp verified successfully',
+            data: {
+                token,
+                email: oUser.email || '',
+                firstName: oUser.firstName || '',
+                lastName: oUser.lastName || '',
+                phoneNumber: oUser.phoneNumber || '',
+                role: oUser.role || '',
+                organization: oUser.organization || '',
+                _id: oUser._id || '',
+            },
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const resendCustomerOtp = async (
+    email: string,
+): Promise<AsyncResponseType> => {
+    try {
+        const oUser = await User.findOne({ email });
+
+        if (!oUser) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'User not found',
+            };
+        }
+
+        const otpGenerate: number = parseInt(
+            otpGenerator
+                .generate(4, {
+                    upperCaseAlphabets: false,
+                    specialChars: false,
+                    digits: true,
+                    lowerCaseAlphabets: false,
+                })
+                .padStart(4, '0'),
+            10,
+        );
+
+        const otpExpires = Date.now() + 5 * 60 * 1000;
+
+        oUser.otp = otpGenerate;
+        oUser.otpExpires = otpExpires;
+        await oUser.save();
+
+        await nodemailer.send(
+            'send_otp.html',
+            {
+                SITENAME: process.env.SITE_NAME,
+                OTP: otpGenerate,
+            },
+            {
+                from: process.env.SMTP_USERNAME,
+                to: oUser.email,
+                subject: '`OTP Verification',
+            },
+        );
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Otp resend successfully to your email',
         };
     } catch (error: unknown) {
         if (error instanceof Error) {

@@ -13,6 +13,7 @@ import {
 } from './products.controller';
 import {
     addProductValidators,
+    customerProductsListValidators,
     customerProductViewValidators,
     deleteProductValidators,
     editProductValidators,
@@ -71,6 +72,7 @@ router.delete(
 // Customer APIs
 router.get(
     '/customer/products/list',
+    customerProductsListValidators,
     isCustomer(),
     customerProductListController,
 );

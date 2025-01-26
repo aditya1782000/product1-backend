@@ -152,7 +152,15 @@ export const customerProductListController = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pinCode = (req as any).pinCode;
 
-    const oResponse = await customerProductList(organization, pinCode);
+    const offSet = Number(req.query.start);
+    const limit = Number(req.query.length);
+
+    const oResponse = await customerProductList(
+        organization,
+        pinCode,
+        offSet,
+        limit,
+    );
 
     return res.status(oResponse.statusCode).send({
         ...oResponse,

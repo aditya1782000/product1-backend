@@ -377,7 +377,7 @@ export const productDelete = async (
         const oProduct = await Product.findById({ _id: productId }).select(
             'organization productImageUrl',
         );
-        
+
         if (!oProduct) {
             return {
                 statusCode: 404,
@@ -437,6 +437,8 @@ export const productDelete = async (
 export const customerProductList = async (
     organisation: mongoose.Types.ObjectId,
     pinCode: number,
+    start: number,
+    limit: number,
 ): Promise<AsyncResponseType> => {
     try {
         const products = await Product.find(
@@ -450,6 +452,9 @@ export const customerProductList = async (
             },
         )
             .select('productName productImageUrl')
+            .skip(start)
+            .limit(limit)
+            .sort({ dCreatedAt: -1 })
             .lean();
 
         if (!products.length) {

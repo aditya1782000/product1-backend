@@ -1,4 +1,4 @@
-import { body, param } from 'express-validator';
+import { body, param, query } from 'express-validator';
 import enums from '../../../enum';
 
 export const addProductValidators = [
@@ -207,6 +207,22 @@ export const deleteProductValidators = [
         .bail()
         .isMongoId()
         .withMessage('Invalid Id'),
+];
+
+export const customerProductsListValidators = [
+    query('start')
+        .notEmpty()
+        .withMessage('Offset is required')
+        .bail()
+        .isNumeric()
+        .withMessage('Invalid offset value'),
+
+    query('length')
+        .notEmpty()
+        .withMessage('Limit is required')
+        .bail()
+        .isNumeric()
+        .withMessage('Invalid limit value'),
 ];
 
 export const customerProductViewValidators = [

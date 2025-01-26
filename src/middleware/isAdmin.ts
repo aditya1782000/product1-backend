@@ -124,6 +124,18 @@ export const isAdmin = (
                 return res.status(400).json({ errors: errors.array() });
             }
 
+            // const errors = validationResult(req);
+            // if (!errors.isEmpty()) {
+            //     const errorMessages = errors
+            //         .array()
+            //         .map((error: ValidationError) => error.msg)
+            //         .join(', ');
+            //     return res.status(422).json({
+            //         success: false,
+            //         message: errorMessages,
+            //     });
+            // }
+
             return next();
         } catch (error: unknown) {
             if (error instanceof Error) {

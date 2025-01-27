@@ -451,7 +451,7 @@ export const customerProductList = async (
                 'price.$': 1,
             },
         )
-            .select('productName productImageUrl')
+            .select('productName description howToUse productImageUrl')
             .skip(start)
             .limit(limit)
             .sort({ dCreatedAt: 1 })

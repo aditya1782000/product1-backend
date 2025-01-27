@@ -10,7 +10,7 @@ import {
     listProdutsController,
     toggleProductStatus,
     viewProductsController,
-} from './products.controller';
+} from './products.controllers';
 import {
     addProductValidators,
     customerProductsListValidators,
@@ -78,7 +78,7 @@ router.get(
 );
 
 router.get(
-    '/customer/product/view',
+    '/customer/product/:id/view',
     customerProductViewValidators,
     isCustomer(),
     customerProductViewController,

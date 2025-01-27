@@ -454,7 +454,7 @@ export const customerProductList = async (
             .select('productName productImageUrl')
             .skip(start)
             .limit(limit)
-            .sort({ dCreatedAt: -1 })
+            .sort({ dCreatedAt: 1 })
             .lean();
 
         if (!products.length) {

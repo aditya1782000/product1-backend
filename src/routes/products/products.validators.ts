@@ -226,7 +226,7 @@ export const customerProductsListValidators = [
 ];
 
 export const customerProductViewValidators = [
-    body('id')
+    param('id')
         .notEmpty()
         .withMessage('Id is required')
         .bail()

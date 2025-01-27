@@ -178,7 +178,7 @@ export const customerProductViewController = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pinCode = (req as any).pinCode;
 
-    const { id } = req.body;
+    const { id } = req.params;
 
     const oResponse = await customerProductView(id, organization, pinCode);
 

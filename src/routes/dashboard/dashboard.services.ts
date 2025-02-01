@@ -191,7 +191,7 @@ export const orderDeliveryStatusCount = async (
                     },
                 }),
                 Order.countDocuments({
-                    status: 'pending',
+                    status: 'inApproval',
                     organization: { $in: [organisation] },
                     dCreatedAt: {
                         $gte: start,

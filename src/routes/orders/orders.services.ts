@@ -395,7 +395,7 @@ export const listCustomerPendingOrders = async (
             )
             .populate('orderItems.product', 'productName productImageUrl')
             .select(
-                'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems',
+                'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems invoiceUrl',
             )
             .skip(start)
             .limit(limit)
@@ -451,7 +451,7 @@ export const listCustomerCompletedOrders = async (
             )
             .populate('orderItems.product', 'productName productImageUrl')
             .select(
-                'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems',
+                'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems invoiceUrl',
             )
             .skip(start)
             .limit(limit)

@@ -226,3 +226,70 @@ export const orderDeliveryStatusCount = async (
         };
     }
 };
+
+export const customerOrderConuts = async (
+    year: string,
+    customerId: string,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const start = new Date(`${year}-01-01`);
+        const end = new Date(`${parseInt(year) + 1}-01-01`);
+
+        const [deliveredOrders, approvedOrders, pendingOrders] =
+            await Promise.all([
+                Order.countDocuments({
+                    status: 'delivered',
+                    customer: customerId,
+                    organization: { $in: [organisation] },
+                    dCreatedAt: {
+                        $gte: start,
+                        $lt: end,
+                    },
+                }),
+                Order.countDocuments({
+                    status: 'approved',
+                    customer: customerId,
+                    organization: { $in: [organisation] },
+                    dCreatedAt: {
+                        $gte: start,
+                        $lt: end,
+                    },
+                }),
+                Order.countDocuments({
+                    status: 'inApproval',
+                    customer: customerId,
+                    organization: { $in: [organisation] },
+                    dCreatedAt: {
+                        $gte: start,
+                        $lt: end,
+                    },
+                }),
+            ]);
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Customer order count retrieved successfully',
+            data: {
+                deliveredOrders,
+                approvedOrders,
+                pendingOrders,
+            },
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};

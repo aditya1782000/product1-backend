@@ -6,6 +6,7 @@ import {
     deleteChallanOrganization,
     editChallan,
     editChallanOrganization,
+    listChallanOrgnaization,
     listChallans,
     viewChallan,
     viewChallanOrganization,
@@ -172,6 +173,29 @@ export const listChallansControllers = async (req: Request, res: Response) => {
     const limit = Number(req.body.length);
 
     const oResponse = await listChallans(req, offSet, limit, organization);
+
+    return res.status(oResponse.statusCode).send({
+        data: oResponse,
+        statusCode: undefined,
+    });
+};
+
+export const listChallanOrgnaizationControllers = async (
+    req: Request,
+    res: Response,
+) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organization = (req as any).sOrganization;
+
+    const offSet = Number(req.body.start);
+    const limit = Number(req.body.length);
+
+    const oResponse = await listChallanOrgnaization(
+        req,
+        offSet,
+        limit,
+        organization,
+    );
 
     return res.status(oResponse.statusCode).send({
         data: oResponse,

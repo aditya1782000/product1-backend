@@ -192,9 +192,9 @@ export const createChallan = async (
         });
 
         const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-            const chunks: Buffer[] = [];
+            const chunks: Uint8Array[] = [];
 
-            challanFile.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+            challanFile.on('data', (chunk) => chunks.push(chunk));
             challanFile.on('end', () => resolve(Buffer.concat(chunks)));
             challanFile.on('error', reject);
 
@@ -561,15 +561,14 @@ export const editChallan = async (
         });
 
         const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-            const chunks: Buffer[] = [];
+            const chunks: Uint8Array[] = [];
 
-            challanFile.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+            challanFile.on('data', (chunk) => chunks.push(chunk));
             challanFile.on('end', () => resolve(Buffer.concat(chunks)));
             challanFile.on('error', reject);
 
             challanFile.end();
         });
-
         if (oChallan.challanUrl) {
             const key = extractS3Key(oChallan.challanUrl);
             deleteFileFromS3(key);
@@ -700,6 +699,60 @@ export const listChallans = async (
             success: true,
             message: 'Challan list fetched successfully',
             data: challanList,
+            draw: req.body.draw,
+            recordsTotal: nRecordsTotal,
+            recordsFiltered: nRecordsTotal,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const listChallanOrgnaization = async (
+    req: Request,
+    start: number,
+    limit: number,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const searchFields = ['headingOne', 'headingTwo'];
+
+        const oData = dataTable.initDataTable(req.body, searchFields, 'id');
+
+        const nRecordsTotal = await ChallanOrganization.countDocuments({
+            organization: organisation,
+        });
+
+        const challanOrgList = await ChallanOrganization.find({
+            $and: [oData.oSearchData],
+            organization: organisation,
+        })
+            .select(
+                'id headingOne headingTwo addressLineOne addressLineTwo mobileNo logoPath footer note',
+            )
+            .collation({ locale: 'en', strength: 1 })
+            .sort(oData.oSortingOrder)
+            .skip(start)
+            .limit(limit)
+            .lean();
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Challan organization list fetched successfully',
+            data: challanOrgList,
             draw: req.body.draw,
             recordsTotal: nRecordsTotal,
             recordsFiltered: nRecordsTotal,

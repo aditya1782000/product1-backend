@@ -6,6 +6,7 @@ import {
     deleteChallanValidators,
     editChallanOrganizationValidators,
     editChallanValidators,
+    listChallansOrganizationValidaors,
     listChallansValidaors,
     viewChallanValidators,
 } from './challan.validators';
@@ -17,6 +18,7 @@ import {
     deleteChallanOrganizationControllers,
     editChallanControllers,
     editChallanOrganizationControllers,
+    listChallanOrgnaizationControllers,
     listChallansControllers,
     viewChallanControllers,
     viewChallanOrganizationControlllers,
@@ -82,11 +84,18 @@ router.delete(
     deleteChallanControllers,
 );
 
-router.get(
+router.post(
     '/admin/list/challans',
     listChallansValidaors,
     isAdmin('Challan', 'V'),
     listChallansControllers,
+);
+
+router.post(
+    '/admin/list/challans/organization',
+    listChallansOrganizationValidaors,
+    isAdmin('Challan', 'V'),
+    listChallanOrgnaizationControllers,
 );
 
 export default router;

@@ -1,0 +1,292 @@
+import mongoose from 'mongoose';
+import { AsyncResponseType } from '../../types/async';
+import User from '../../models/user';
+import Attendance from '../../models/attendance';
+import dataTable from '../../utils/dataTable';
+import { Request } from 'express';
+
+export const clockInClockedOut = async (
+    userId: string,
+    location: string,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'User not found',
+            };
+        }
+
+        if (user.role !== 'subAdmin') {
+            return {
+                statusCode: 403,
+                success: false,
+                message: 'Only subAdmins can clock in/out',
+            };
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentTime = new Date();
+
+        const existingAttendance = await Attendance.findOne({
+            user: userId,
+            organization: organisation,
+            date: {
+                $gte: today,
+                $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+            },
+        });
+
+        if (!existingAttendance) {
+            const newAttendance = new Attendance({
+                user: userId,
+                organization: organisation,
+                date: currentTime,
+                clockTimes: [
+                    {
+                        inTime: currentTime,
+                        inLocation: location,
+                    },
+                ],
+                status: 'present',
+            });
+
+            await newAttendance.save();
+
+            return {
+                statusCode: 200,
+                success: true,
+                message: 'Clocked in successfully',
+            };
+        }
+
+        const lastClockRecord =
+            existingAttendance.clockTimes[
+                existingAttendance.clockTimes.length - 1
+            ];
+
+        if (!lastClockRecord.outTime) {
+            lastClockRecord.outTime = currentTime;
+            lastClockRecord.outLocation = location;
+
+            const sessionWorkHours =
+                (currentTime.getTime() - lastClockRecord.inTime.getTime()) /
+                (1000 * 60 * 60);
+
+            existingAttendance.totalWorkHours += parseFloat(
+                sessionWorkHours.toFixed(2),
+            );
+
+            if (existingAttendance.clockTimes.length > 1) {
+                const previousSession =
+                    existingAttendance.clockTimes[
+                        existingAttendance.clockTimes.length - 2
+                    ];
+                const breakDuration =
+                    (lastClockRecord.inTime.getTime() -
+                        previousSession.outTime!.getTime()) /
+                    (1000 * 60 * 60);
+                existingAttendance.totalBreakHours += parseFloat(
+                    breakDuration.toFixed(2),
+                );
+
+                if (previousSession.outTime) {
+                    existingAttendance.breaksStartTime.push(
+                        previousSession.outTime,
+                    );
+                }
+                existingAttendance.breakEndTime.push(lastClockRecord.inTime);
+            }
+            await existingAttendance.save();
+            return {
+                statusCode: 200,
+                success: true,
+                message: 'Clocked out successfully',
+            };
+        } else {
+            existingAttendance.clockTimes.push({
+                inTime: currentTime,
+                inLocation: location,
+            });
+
+            await existingAttendance.save();
+
+            return {
+                statusCode: 200,
+                success: true,
+                message: 'Clocked in successfully',
+            };
+        }
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const listClockInClockOutTimes = async (
+    userId: string,
+    month: number,
+    year: number,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'User not found',
+            };
+        }
+
+        const adjustedMonth = month - 1;
+        const startDate = new Date(year, adjustedMonth, 1);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(year, adjustedMonth + 1, 1);
+        endDate.setHours(0, 0, 0, 0);
+
+        const attendanceRecords = await Attendance.find({
+            user: userId,
+            organization: organisation,
+            date: { $gte: startDate, $lt: endDate },
+        }).sort({ date: 1 });
+
+        if (!attendanceRecords || attendanceRecords.length === 0) {
+            return {
+                statusCode: 200,
+                success: true,
+                message: 'No attendance records found',
+            };
+        }
+
+        const formattedRecords = attendanceRecords.map((record) => ({
+            date: record.date.toISOString().split('T')[0],
+            status: record.status,
+            totalWorkHours: record.totalWorkHours,
+            totalBreakHours: record.totalBreakHours,
+            clockTimes: record.clockTimes.map((clock) => ({
+                inTime: clock.inTime,
+                inLocation: clock.inLocation,
+                outTime: clock.outTime || null,
+                outLocation: clock.outLocation || null,
+            })),
+            breaksStartTime: record.breaksStartTime || [],
+            breakEndTime: record.breakEndTime || [],
+        }));
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Attendance records fetched successfully',
+            data: formattedRecords,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const listSubAdminAttendanceSheet = async (
+    userId: string,
+    req: Request,
+    start: number,
+    limit: number,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'User not found',
+            };
+        }
+
+        if (user.role !== 'superAdmin') {
+            return {
+                statusCode: 403,
+                success: false,
+                message: 'Only superAdmins can sees attendance sheets',
+            };
+        }
+        const searchFields = ['firstName'];
+
+        const oData = dataTable.initDataTable(req.body, searchFields, 'srNo');
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+
+        const nRecordsTotal = await Attendance.countDocuments({
+            date: { $gte: today, $lt: tomorrow },
+            organization: organisation,
+        });
+
+        const attendanceRecords = await Attendance.find({
+            date: { $gte: today, $lt: tomorrow },
+            organization: organisation,
+        })
+            .populate('user', '_id firstName lastName phoneNumber')
+            .select('date clockTimes totalWorkHours')
+            .collation({ locale: 'en', strength: 1 })
+            .sort(oData.oSortingOrder)
+            .skip(start)
+            .limit(limit)
+            .lean();
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Attendance records fetched successfully',
+            data: attendanceRecords,
+            draw: req.body.draw,
+            recordsTotal: nRecordsTotal,
+            recordsFiltered: nRecordsTotal,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};

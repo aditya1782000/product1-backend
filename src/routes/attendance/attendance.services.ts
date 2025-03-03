@@ -260,8 +260,8 @@ export const listSubAdminAttendanceSheet = async (
                 message: 'Only superAdmins can see attendance sheets',
             };
         }
-        const searchFields = ['firstName'];
 
+        const searchFields = ['firstName', 'lastName'];
         const oData = dataTable.initDataTable(req.body, searchFields, 'srNo');
 
         const today = new Date();
@@ -269,14 +269,31 @@ export const listSubAdminAttendanceSheet = async (
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);
 
+        let userQuery = {};
+        if (oData.oSearchData.$or && oData.oSearchData.$or.length > 0) {
+            userQuery = {
+                $or: oData.oSearchData.$or.map(
+                    (condition: { [key: string]: RegExp | number }) => {
+                        const key = Object.keys(condition)[0];
+                        return { [key]: condition[key] };
+                    },
+                ),
+            };
+        }
+
+        const matchingUsers = await User.find(userQuery).select('_id');
+        const userIds = matchingUsers.map((user) => user._id);
+
         const nRecordsTotal = await Attendance.countDocuments({
             date: { $gte: today, $lt: tomorrow },
             organization: organisation,
+            user: { $in: userIds },
         });
 
         const attendanceRecords = await Attendance.find({
             date: { $gte: today, $lt: tomorrow },
             organization: organisation,
+            user: { $in: userIds },
         })
             .populate('user', '_id firstName lastName phoneNumber')
             .select('date clockTimes totalWorkHours')
@@ -529,10 +546,12 @@ export const listLeaveRequests = async (
         const oData = dataTable.initDataTable(req.body, searchFields, 'srNo');
 
         const nRecordsTotal = await LeaveRequest.countDocuments({
+            status: 'pending',
             organization: organisation,
         });
 
         const leaveRequests = await LeaveRequest.find({
+            status: 'pending',
             organization: organisation,
         })
             .populate('user', '_id firstName lastName phoneNumber')

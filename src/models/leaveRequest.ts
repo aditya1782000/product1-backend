@@ -74,7 +74,7 @@ export const LeaveRequestSchema: Schema<ILeaveRequest> =
     );
 
 const LeaveRequest: Model<ILeaveRequest> = mongoose.model<ILeaveRequest>(
-    'leaveRequets',
+    'leaveRequests',
     LeaveRequestSchema,
 );
 

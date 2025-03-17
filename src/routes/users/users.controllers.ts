@@ -36,6 +36,8 @@ export const addUsersControlller = async (
         city,
         state,
         pinCode,
+        orgnaizationName,
+        gstNumber,
     } = req.body;
 
     const oResponse = await addUsers(
@@ -52,6 +54,8 @@ export const addUsersControlller = async (
         city,
         state,
         pinCode,
+        orgnaizationName,
+        gstNumber,
     );
 
     return res.status(oResponse.statusCode).send({
@@ -125,6 +129,8 @@ export const userEditController = async (req: Request, res: Response) => {
         city,
         state,
         pinCode,
+        orgnaizationName,
+        gstNumber,
     } = req.body;
 
     const oResponse = await userEdit(
@@ -142,6 +148,8 @@ export const userEditController = async (req: Request, res: Response) => {
         city,
         state,
         pinCode,
+        orgnaizationName,
+        gstNumber,
     );
 
     return res.status(oResponse.statusCode).send({

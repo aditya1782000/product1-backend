@@ -12,7 +12,7 @@ const enums = {
         'Attendance',
     ],
     permissionType: ['ALL', 'A', 'E', 'D', 'V', 'AD'],
-    unitType: ['KG', 'LTR', 'MT', 'PC'],
+    unitType: ['KG', 'LTR', 'MT', 'PC', 'TIN', 'BOX', 'BUNDLE'],
     supportedUploadType: [
         'image/jpeg',
         'image/jpg',
@@ -28,6 +28,7 @@ const enums = {
     leaveType: ['fullDay', 'firstHalf', 'secondHalf'],
     leaveStatus: ['pending', 'approved', 'rejected'],
     leaveActions: ['approved', 'rejected'],
+    customerType: ['REATILER', 'NON TRADE', 'UTCL'],
 };
 
 export default enums;

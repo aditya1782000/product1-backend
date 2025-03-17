@@ -23,6 +23,8 @@ type UpdateUserOption = {
     permissions?: Permission[];
     addressLineOne?: string;
     addressLineTwo?: string;
+    orgnaizationName?: string;
+    gstNumber?: string;
     city?: string;
     state?: string;
     pinCode?: number;
@@ -121,6 +123,8 @@ const handleCutomerCreation = async (
     city: string,
     state: string,
     pinCode: number,
+    orgnaizationName: string,
+    gstNumber: string,
 ): Promise<AsyncResponseType> => {
     const exisitngUser = await User.findOne({ email });
 
@@ -156,6 +160,8 @@ const handleCutomerCreation = async (
         city,
         state,
         pinCode,
+        orgnaizationName,
+        gstNumber,
     });
 
     const organisations = await Organisation.find({
@@ -264,6 +270,8 @@ export const addUsers = async (
     city: string,
     state: string,
     pinCode: number,
+    orgnaizationName: string,
+    gstNumber: string,
 ): Promise<AsyncResponseType> => {
     try {
         if (role === 'customer') {
@@ -280,6 +288,8 @@ export const addUsers = async (
                 city,
                 state,
                 pinCode,
+                orgnaizationName,
+                gstNumber,
             );
         } else if (role == 'employee') {
             return await handleEmployeeCreation(
@@ -347,7 +357,7 @@ export const usersList = async (
                 'firstName lastName email phoneNumber permissions organization isActive';
         } else if (role == 'customer') {
             selectedFields =
-                'firstName lastName email phoneNumber organization type addressLineOne addressLineTwo city state pinCode isActive';
+                'firstName lastName email phoneNumber organization type addressLineOne addressLineTwo city state pinCode isActive orgnaizationName gstNumber';
         } else if (role === 'employee') {
             selectedFields =
                 'firstName lastName email phoneNumber organization isActive';
@@ -402,7 +412,7 @@ export const userView = async (
 ): Promise<AsyncResponseType> => {
     try {
         const selectedFields =
-            'firstName lastName email phoneNumber role permissions type isActive addressLineOne addressLineTwo city state pinCode';
+            'firstName lastName email phoneNumber role permissions type isActive addressLineOne addressLineTwo city state pinCode orgnaizationName gstNumber';
 
         const oUser = await User.findById({
             _id: userId,
@@ -594,6 +604,8 @@ export const userEdit = async (
     city: string,
     state: string,
     pinCode: number,
+    orgnaizationName: string,
+    gstNumber: string
 ): Promise<AsyncResponseType> => {
     try {
         if (role === 'customer') {
@@ -610,6 +622,8 @@ export const userEdit = async (
                     city,
                     state,
                     pinCode,
+                    orgnaizationName,
+                    gstNumber,
                 },
                 organisation,
             );

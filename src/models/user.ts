@@ -11,6 +11,7 @@ export interface IUser extends Document {
     type: string;
     permissions: IPermission[];
     organization: mongoose.Types.ObjectId[];
+    orgnaizationName?: string;
     resetPasswordToken?: string;
     resetPasswordExpires?: number;
     gstNumber?: string;
@@ -63,6 +64,7 @@ const UserSchema: Schema<IUser> = new Schema<IUser>(
         },
         type: {
             type: String,
+            // enum: data.customerType
         },
         permissions: { type: [permissionSchema] },
         organization: {
@@ -73,6 +75,7 @@ const UserSchema: Schema<IUser> = new Schema<IUser>(
                 },
             ],
         },
+        orgnaizationName: String,
         resetPasswordToken: String,
         resetPasswordExpires: Date,
         gstNumber: String,

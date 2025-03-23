@@ -201,18 +201,74 @@ export function storeStatements(
                                     continue;
                                 }
 
-                                const statement = await Statement.create({
-                                    organization: organization,
-                                    organizationName: ledgerName,
-                                    organizationAddress: ledgerInfo.address,
-                                    statementData: ledgerInfo.data,
-                                });
+                                const existingStatement =
+                                    await Statement.findOne({
+                                        organization: organization,
+                                        organizationName: ledgerName,
+                                    });
 
-                                savedLedgers.push({
-                                    name: ledgerName,
-                                    totalTransactions: ledgerInfo.data.length,
-                                    id: statement._id,
-                                });
+                                if (existingStatement) {
+                                    const existingDates = new Set(
+                                        existingStatement.statementData.map(
+                                            (item) =>
+                                                item.date.toISOString() +
+                                                item.particulars +
+                                                (item.vchNo || '') +
+                                                (item.debit?.toString() || '') +
+                                                (item.credit?.toString() || ''),
+                                        ),
+                                    );
+
+                                    const newData = ledgerInfo.data.filter(
+                                        (item) => {
+                                            const itemkey =
+                                                item.date.toISOString() +
+                                                item.particulars +
+                                                (item.vchNo || '') +
+                                                (item.debit?.toString() || '') +
+                                                (item.credit?.toString() || '');
+                                            return !existingDates.has(itemkey);
+                                        },
+                                    );
+
+                                    if (newData.length > 0) {
+                                        existingStatement.statementData = [
+                                            ...existingStatement.statementData,
+                                            ...newData,
+                                        ];
+
+                                        await existingStatement.save();
+
+                                        savedLedgers.push({
+                                            name: ledgerName,
+                                            totalTransactions: newData.length,
+                                            id: existingStatement._id,
+                                            isExisting: true,
+                                        });
+                                    } else {
+                                        savedLedgers.push({
+                                            name: ledgerName,
+                                            totalTransactions: 0,
+                                            id: existingStatement._id,
+                                            isExisting: true,
+                                            noNewData: true,
+                                        });
+                                    }
+                                } else {
+                                    const statement = await Statement.create({
+                                        organization: organization,
+                                        organizationName: ledgerName,
+                                        organizationAddress: ledgerInfo.address,
+                                        statementData: ledgerInfo.data,
+                                    });
+
+                                    savedLedgers.push({
+                                        name: ledgerName,
+                                        totalTransactions:
+                                            ledgerInfo.data.length,
+                                        id: statement._id,
+                                    });
+                                }
                             }
                         }
 

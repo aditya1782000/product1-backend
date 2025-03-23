@@ -3,6 +3,7 @@ import { AsyncResponseType } from '../../types/async';
 import { storeStatements } from '../../utils/csvParse';
 import { Request } from 'express';
 import fs from 'fs';
+import Statement from '../../models/statements';
 
 const deleteTempFile = (filePath: string) => {
     fs.unlink(filePath, (err) => {
@@ -52,5 +53,62 @@ export const addStatements = async (
         if (req?.file?.path) {
             deleteTempFile(req?.file?.path);
         }
+    }
+};
+
+export const listStatements = async (
+    organizationName: string,
+    organisation: mongoose.Types.ObjectId,
+    from: Date,
+    to: Date,
+): Promise<AsyncResponseType> => {
+    try {
+        const statement = await Statement.findOne({
+            organizationName: organizationName,
+            organization: organisation,
+        });
+
+        if (!statement) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'Statements not found',
+            };
+        }
+
+        const filteredStatements = statement.statementData.filter(
+            (data) => data.date >= from && data.date <= to,
+        );
+
+        const creditTotal = filteredStatements.reduce(
+            (total, item) => total + (item.credit || 0),
+            0,
+        );
+
+        const debitTotal = filteredStatements.reduce(
+            (total, item) => total + (item.debit || 0),
+            0,
+        );
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Statements retrieved successfully',
+            data: { filteredStatements, creditTotal, debitTotal },
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
     }
 };

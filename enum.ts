@@ -20,6 +20,8 @@ const enums = {
         'image/png',
         'application/pdf',
         'text/csv',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/msword',
     ],
     orderStatus: ['inApproval', 'approved', 'rejected', 'delivered'],

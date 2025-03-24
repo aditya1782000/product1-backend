@@ -4,6 +4,7 @@ import { storeStatements } from '../../utils/csvParse';
 import { Request } from 'express';
 import fs from 'fs';
 import Statement from '../../models/statements';
+import dataTable from '../../utils/dataTable';
 
 const deleteTempFile = (filePath: string) => {
     fs.unlink(filePath, (err) => {
@@ -90,11 +91,70 @@ export const listStatements = async (
             0,
         );
 
+        const closingBalance =
+            debitTotal > creditTotal
+                ? debitTotal - creditTotal
+                : creditTotal - debitTotal;
+
+        const closingBalanceDirection =
+            debitTotal > creditTotal
+                ? 'By'
+                : creditTotal > debitTotal
+                  ? 'To'
+                  : 'null';
+
         return {
             statusCode: 200,
             success: true,
             message: 'Statements retrieved successfully',
-            data: { filteredStatements, creditTotal, debitTotal },
+            data: {
+                organizationName: statement.organizationName,
+                organizationAddress: statement.organizationAddress,
+                filteredStatements,
+                creditTotal,
+                debitTotal,
+                closingBalance,
+                closingBalanceDirection,
+            },
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const listStatementOrganizationNames = async (
+    req: Request,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const searchFields = ['organizationName'];
+
+        const oData = dataTable.initDataTable(req.body, searchFields, 'srNo');
+
+        const orgName = await Statement.find({
+            $and: [oData.oSearchData],
+            organization: organisation,
+        })
+            .select('organizationName')
+            .lean();
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Statement organization retrieved successfully',
+            data: orgName,
         };
     } catch (error: unknown) {
         if (error instanceof Error) {

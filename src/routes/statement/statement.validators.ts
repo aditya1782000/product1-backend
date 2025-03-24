@@ -12,3 +12,9 @@ export const listStatementsValidators = [
 
     body('to').notEmpty().withMessage('To date is required'),
 ];
+
+export const listCustomerStatementsValidators = [
+    body('from').notEmpty().withMessage('From date is required'),
+
+    body('to').notEmpty().withMessage('To date is required'),
+];

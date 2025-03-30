@@ -45,7 +45,7 @@ const services: Services = {
             } else if (file.fieldname === 'pdf') {
                 allowedMimes = data.supportedUploadType;
                 errMsg = errMsg.replace('__Replace_MSG__', 'PDF');
-            } else if (file.fieldname === 'CSV') {
+            } else if (file.fieldname === 'csv') {
                 allowedMimes = data.supportedUploadType;
                 errMsg = errMsg.replace('__Replace_MSG__', 'CSV');
             } else {

@@ -10,6 +10,7 @@ interface RequestWithUser extends Request {
     sEmail?: string;
     pinCode?: number;
     sOrganization?: mongoose.Types.ObjectId[];
+    sOrgnaizationName?: string;
 }
 
 export const isCustomer = () => {
@@ -39,7 +40,7 @@ export const isCustomer = () => {
             }
 
             const oUser = await User.findById(decoded.id).select(
-                'organization role isActive pinCode',
+                'organization role isActive pinCode orgnaizationName',
             );
 
             if (!oUser) {
@@ -67,6 +68,7 @@ export const isCustomer = () => {
             req.sEmail = oUser.email;
             (req as any).sOrganization = oUser.organization;
             (req as any).pinCode = oUser.pinCode;
+            (req as any).sOrgnaizationName = oUser.orgnaizationName;
 
             const errors = validationResult(req);
             if (!errors.isEmpty()) {

@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "rimraf build && tsc && env-cmd -f .env.development pm2 start ./build/index.js --name app",
-    "stop": "pm2 stop ./build/index.js",
+    "start": "rimraf build && tsc && cp -r src/utils/email_templates build/src/utils/ && env-cmd -f .env.development pm2 start ./build/src/index.js --name app --no-daemon",   
+    "stop": "pm2 stop ./build/src/index.js",
     "dev": "env-cmd -f .env.development nodemon ./src/index.ts",
     "test": "env-cmd -f .env.development jest --forceExit",
     "test-watch": "jest --watchAll --no-cache",

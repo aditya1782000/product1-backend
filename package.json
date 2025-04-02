@@ -10,7 +10,8 @@
     "test": "env-cmd -f .env.development jest --forceExit",
     "test-watch": "jest --watchAll --no-cache",
     "eslint": "npx eslint .",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "reload": "env-cmd -f .env.development pm2 reload app --update-env"
   },
   "keywords": [],
   "author": "",

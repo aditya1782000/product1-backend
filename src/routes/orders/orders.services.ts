@@ -6,6 +6,7 @@ import { Request } from 'express';
 import User from '../../models/user';
 import dataTable from '../../utils/dataTable';
 import Product from '../../models/product';
+import { ObjectId } from 'mongodb';
 
 interface Filter {
     status?: string;
@@ -55,6 +56,7 @@ export const createCustomerOrder = async (
     totalAmount: number,
     status: string,
     organisation: mongoose.Types.ObjectId,
+    deliveryAddress: string,
 ): Promise<AsyncResponseType> => {
     try {
         const currentDate = new Date();
@@ -88,6 +90,7 @@ export const createCustomerOrder = async (
             type: 'customer',
             organization: organisation,
             orderNumber,
+            deliveryAddress: new ObjectId(deliveryAddress),
         };
 
         const producer = myKafka.producer();

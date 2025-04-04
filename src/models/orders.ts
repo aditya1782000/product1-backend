@@ -20,6 +20,7 @@ export interface IOrder extends Document {
     invoiceUrl: string;
     invoiceNo: string;
     orderNumber: string;
+    deliveryAddress?: mongoose.Types.ObjectId;
     dCreatedAt?: Date;
 }
 
@@ -75,6 +76,10 @@ const orderSchema: Schema<IOrder> = new Schema<IOrder>(
         deliveredAt: Date,
         invoiceUrl: String,
         invoiceNo: String,
+        deliveryAddress: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'DeliveryAddress',
+        },
         orderNumber: {
             type: String,
             required: true,

@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import User from '../models/user';
-import { validationResult } from 'express-validator';
+import { ValidationError, validationResult } from 'express-validator';
 
 interface RequestWithUser extends Request {
     userId?: string;
@@ -72,7 +72,13 @@ export const isCustomer = () => {
 
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return res.status(400).json({ errors: errors.array() });
+                    .array()
+                    .map((error: ValidationError) => error.msg)
+                    .join(', ');
+                return res.status(422).json({
+                    success: false,
+                    message: errorMessages,
+                });
             }
 
             return next();

@@ -28,7 +28,7 @@ export const createCustomerOrderController = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organization = (req as any).sOrganization;
 
-    const { orderItems, totalAmount, status } = req.body;
+    const { orderItems, totalAmount, status, deliveryAddress } = req.body;
 
     const oResponse = await createCustomerOrder(
         customer,
@@ -36,6 +36,7 @@ export const createCustomerOrderController = async (
         totalAmount,
         status,
         organization,
+        deliveryAddress,
     );
 
     return res.status(oResponse.statusCode).send({

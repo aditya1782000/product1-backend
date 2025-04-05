@@ -14,6 +14,7 @@ import attendance from './attendance/attendance.routes';
 import unitType from './unitType/unitType.routes';
 import customerType from './customerType/customerType.routes';
 import statement from './statement/statement.routes';
+import deilveryAddress from './deliveryAddress/deliveryAddress.routes';
 
 const router = express.Router();
 
@@ -33,6 +34,7 @@ router.use('/', [
     unitType,
     customerType,
     statement,
+    deilveryAddress,
 ]);
 
 export default router;

@@ -6,6 +6,7 @@ import { Request } from 'express';
 import User from '../../models/user';
 import dataTable from '../../utils/dataTable';
 import Product from '../../models/product';
+import { ObjectId } from 'mongodb';
 
 interface Filter {
     status?: string;
@@ -55,6 +56,7 @@ export const createCustomerOrder = async (
     totalAmount: number,
     status: string,
     organisation: mongoose.Types.ObjectId,
+    deliveryAddress: string,
 ): Promise<AsyncResponseType> => {
     try {
         const currentDate = new Date();
@@ -88,6 +90,7 @@ export const createCustomerOrder = async (
             type: 'customer',
             organization: organisation,
             orderNumber,
+            deliveryAddress: new ObjectId(deliveryAddress),
         };
 
         const producer = myKafka.producer();
@@ -394,6 +397,10 @@ export const listCustomerPendingOrders = async (
                 '_id firstName lastName phoneNumber addressLineOne addressLineTwo city state pinCode',
             )
             .populate('orderItems.product', 'productName productImageUrl')
+            .populate(
+                'deliveryAddress',
+                '_id addressLineOne addressLineTwo city state pinCode customer organization',
+            )
             .select(
                 'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems invoiceUrl',
             )
@@ -443,6 +450,10 @@ export const listCustomerCompletedOrders = async (
                 '_id firstName lastName phoneNumber addressLineOne addressLineTwo city state pinCode',
             )
             .populate('orderItems.product', 'productName productImageUrl')
+            .populate(
+                'deliveryAddress',
+                '_id addressLineOne addressLineTwo city state pinCode customer organization',
+            )
             .select(
                 'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems invoiceUrl',
             )
@@ -550,6 +561,10 @@ export const viewCustomerOrder = async (
                 '_id firstName lastName phoneNumber addressLineOne addressLineTwo city state pinCode',
             )
             .populate('orderItems.product', 'productName productImageUrl')
+            .populate(
+                'deliveryAddress',
+                '_id addressLineOne addressLineTwo city state pinCode customer organization',
+            )
             .select(
                 'orderItems totalAmount status type deliveredAt dCreatedAt dUpdatedAt orderNumber',
             )

@@ -11,7 +11,7 @@
     "test-watch": "jest --watchAll --no-cache",
     "eslint": "npx eslint .",
     "prepare": "husky install",
-    "reload": "env-cmd -f .env.development pm2 reload app --update-env"
+    "reload": "rimraf build && tsc && cp -r src/utils/email_templates build/src/utils/ && env-cmd -f .env.development pm2 reload app --update-env"
   },
   "keywords": [],
   "author": "",

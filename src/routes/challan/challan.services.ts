@@ -133,6 +133,7 @@ export const createChallan = async (
     total: number,
     organisation: mongoose.Types.ObjectId,
     vehicleNo?: string,
+    fraightAndTransport?: number,
 ): Promise<AsyncResponseType> => {
     try {
         const existingChallanOrganisation = await ChallanOrganization.findOne({
@@ -205,6 +206,7 @@ export const createChallan = async (
             items,
             customerMobileNo: Number(customerMobileNo),
             vehicleNo: vehicleNo,
+            fraightAndTransport: Number(fraightAndTransport),
         });
 
         const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
@@ -235,6 +237,7 @@ export const createChallan = async (
             challanUrl: uploadData.Location,
             vehicleNo: vehicleNo,
             customerMobileNo: customerMobileNo,
+            fraightAndTransport: fraightAndTransport,
         });
 
         return {
@@ -509,6 +512,7 @@ export const editChallan = async (
     items?: Item[],
     total?: number,
     vehicleNo?: string,
+    fraightAndTransport?: number,
 ): Promise<AsyncResponseType> => {
     try {
         const oChallan = await Challan.findById(challanId);
@@ -581,6 +585,9 @@ export const editChallan = async (
             address: address || oChallan.address || '',
             items: items || oChallan.items || [],
             vehicleNo: vehicleNo || oChallan.vehicleNo || '',
+            fraightAndTransport:
+                Number(fraightAndTransport) ||
+                Number(oChallan.fraightAndTransport),
         });
 
         const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
@@ -614,6 +621,7 @@ export const editChallan = async (
             challanUrl: uploadData.Location,
             customerMobileNo: customerMobileNo || oChallan.customerMobileNo,
             vehicleNo: vehicleNo || oChallan.vehicleNo,
+            fraightAndTransport: fraightAndTransport,
         });
 
         return {

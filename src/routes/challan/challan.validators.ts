@@ -50,8 +50,7 @@ export const createChallanValidators = [
         .withMessage('footer  must between 3 to 300'),
 
     body('items')
-        .notEmpty()
-        .withMessage('Items is required')
+        .optional()
         .bail()
         .isArray()
         .withMessage('Items must be an array'),

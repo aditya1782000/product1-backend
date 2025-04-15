@@ -125,13 +125,13 @@ router.post(
 
 router.post(
     '/admin/create/custom/challan',
+    createCustomChallanValidators,
     isAdmin('Challan', 'A'),
     createCustomChallanControllers,
 );
 
 router.get(
     '/admin/custom/challan/org/view',
-    createCustomChallanValidators,
     isAdmin('Challan', 'V'),
     viewCustomChallanOrganizationControllers,
 );

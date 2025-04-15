@@ -23,6 +23,7 @@ interface DeliverySlip {
     footer?: string;
     note?: string;
     logoPath?: string;
+    fraightAndTransport?: number;
 }
 
 class PDFHelper {
@@ -34,6 +35,7 @@ class PDFHelper {
     private readonly maxItemsPerPage = 8;
     private items?: DeliverySlip['items'];
     private total?: number;
+    private freightAndTransport?: number;
 
     constructor(doc: PDFKit.PDFDocument) {
         this.doc = doc;
@@ -46,6 +48,7 @@ class PDFHelper {
             (sum, item) => sum + Number(item.qty),
             0,
         );
+        this.freightAndTransport = data.fraightAndTransport;
         for (let page = 0; page < totalPages; page++) {
             if (page > 0) {
                 this.doc.addPage();
@@ -71,6 +74,7 @@ class PDFHelper {
                     totalPages > 1
                         ? `${data.slipNo} (Page ${page + 1}/${totalPages})`
                         : data.slipNo,
+                freightAndTransport: data.fraightAndTransport,
             };
 
             this.generateSingleSlip(pageData, 0, page === totalPages - 1);
@@ -109,6 +113,7 @@ class PDFHelper {
             )
             .setItems(data.items)
             .setTotal(data.total)
+            .setFreightAndTransport(data.fraightAndTransport)
             .drawTable(xOffset, isLastPage)
             .drawFooter(
                 xOffset,
@@ -118,6 +123,8 @@ class PDFHelper {
                 data.vehicleNo || '',
             )
             .drawWatermark(xOffset, data.logoPath);
+
+        return this;
     }
 
     private drawOuterBox(xOffset: number) {
@@ -129,6 +136,11 @@ class PDFHelper {
                 this.pageHeight - this.margin * 2,
             )
             .stroke();
+        return this;
+    }
+
+    private setFreightAndTransport(freightAndTransport?: number) {
+        this.freightAndTransport = freightAndTransport;
         return this;
     }
 
@@ -381,32 +393,78 @@ class PDFHelper {
                         textOptions,
                     );
 
-                this.doc
-                    .text(
-                        `${item.qty.toString()}.000`,
-                        qtyCenter - 15,
-                        currentY,
-                        {
-                            width: 40,
-                            align: 'center',
-                        },
-                    )
-                    .text(
-                        `${item.rate.toString()}.00`,
-                        rateCenter - 15,
-                        currentY,
-                        {
-                            width: 40,
-                            align: 'center',
-                        },
-                    )
-                    .text(itemTotal.toFixed(2), totalCenter - 20, currentY, {
-                        width: 40,
-                        align: 'center',
-                    });
+                if (item.qty > 0 || item.rate > 0) {
+                    this.doc
+                        .text(
+                            `${item.qty.toString()}.000`,
+                            qtyCenter - 15,
+                            currentY,
+                            {
+                                width: 40,
+                                align: 'center',
+                            },
+                        )
+                        .text(
+                            `${item.rate.toString()}.00`,
+                            rateCenter - 15,
+                            currentY,
+                            {
+                                width: 40,
+                                align: 'center',
+                            },
+                        )
+                        .text(
+                            itemTotal.toFixed(2),
+                            totalCenter - 20,
+                            currentY,
+                            {
+                                width: 40,
+                                align: 'center',
+                            },
+                        );
+                }
 
                 currentY += rowHeight;
             });
+
+            if (
+                isLastPage &&
+                typeof this.freightAndTransport === 'number' &&
+                this.freightAndTransport > 0
+            ) {
+                const freightText = 'Fraight and Labour Exp.';
+                const textOptions = {
+                    width: particularsWidth,
+                    align: 'left' as const,
+                };
+
+                const textHeight = this.doc.heightOfString(
+                    freightText,
+                    textOptions,
+                );
+                const rowHeight = Math.max(baseRowHeight, textHeight + 10);
+
+                this.doc
+                    .fontSize(10)
+                    .text(
+                        freightText,
+                        columns.start + 10,
+                        currentY,
+                        textOptions,
+                    );
+
+                this.doc.text(
+                    this.freightAndTransport.toFixed(2),
+                    totalCenter - 20,
+                    currentY,
+                    {
+                        width: 40,
+                        align: 'center',
+                    },
+                );
+
+                currentY += rowHeight;
+            }
         }
 
         const totalY = tableBottom - 30;
@@ -428,7 +486,7 @@ class PDFHelper {
                     align: 'center',
                 })
                 .text(
-                    `₹ ${this.total?.toFixed(2)}`,
+                    `${this.total?.toFixed(2)}`,
                     totalCenter - 20,
                     totalY + 10,
                     {

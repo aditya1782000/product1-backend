@@ -1124,7 +1124,8 @@ export const editCustomChallanOrganization = async (
                 gstNo: gstNo || existingCustomChallanOrganisation.gstNo,
                 panNo: panNo || existingCustomChallanOrganisation.panNo,
                 headerContent:
-                    headerContent || existingCustomChallanOrganisation,
+                    headerContent ||
+                    existingCustomChallanOrganisation.headerContent,
                 footerOne:
                     footerOne || existingCustomChallanOrganisation.footerOne,
                 footerTwo:
@@ -1503,7 +1504,9 @@ export const listCustomChallanOrg = async (
             $and: [oData.oSearchData],
             organization: organisation,
         })
-            .select('_id challanOrg title')
+            .select(
+                '_id challanOrg title address gstNo panNo headerContent footerOne footerTwo footerThree footerFour footerFive',
+            )
             .collation({ locale: 'en', strength: 1 })
             .sort(oData.oSortingOrder)
             .skip(start)

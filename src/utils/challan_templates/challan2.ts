@@ -134,7 +134,7 @@ class ChallanGenerator {
             .fontSize(10)
             .text(`Consignee's name : ${data.consigneeName}`, 30, detailsTop)
             .text(`Party code no. : ${data.partyCode}`, 30, detailsTop + 15)
-            .text(`Mobile no. : +${data.contactNumber}`, 30, detailsTop + 30)
+            .text(`Mobile no. : ${data.contactNumber}`, 30, detailsTop + 30)
             .text(`Address : ${data.address}`, 30, detailsTop + 45);
 
         return this;

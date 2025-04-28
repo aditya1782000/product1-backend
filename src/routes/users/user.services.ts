@@ -614,6 +614,15 @@ const updateUser = async (
             message: 'Failed to update user',
         };
     }
+
+    if (updateUser.permissions) {
+        global.io.emit('permission-updated', {
+            message: 'Permissions Updated',
+            userId: userId,
+            permissions: updateUserData.permissions,
+        });
+    }
+
     return {
         statusCode: 200,
         success: true,

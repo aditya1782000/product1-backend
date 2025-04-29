@@ -75,7 +75,6 @@ export const createCustomerOrder = async (
         const ficalYearEnd = new Date(`${endYear}-03-31`);
 
         const nOrderTotal = await Order.countDocuments({
-            customer,
             dCreatedAt: { $gte: ficalYearStart, $lt: ficalYearEnd },
             status: { $ne: 'rejected' },
         });

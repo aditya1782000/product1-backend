@@ -45,19 +45,6 @@ export const addProduct = async (
 ): Promise<AsyncResponseType> => {
     let tempFilePath: string | undefined;
     try {
-        const existingProduct = await Product.findOne({
-            productName,
-            organization: organisation,
-        });
-
-        if (existingProduct) {
-            return {
-                statusCode: 409,
-                success: false,
-                message: 'Product with this name already exists',
-            };
-        }
-
         let productImageUrl: string | undefined;
 
         if (req.file) {

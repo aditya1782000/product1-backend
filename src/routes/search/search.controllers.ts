@@ -11,6 +11,9 @@ export const customerProductsSearchControllers = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pinCode = (req as any).pinCode;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const type = (req as any).type;
+
     const keyword = String(req.query.keyword);
     const offSet = Number(req.query.start);
     const limit = Number(req.query.length);
@@ -21,6 +24,7 @@ export const customerProductsSearchControllers = async (
         offSet,
         limit,
         organization,
+        type,
     );
 
     return res.status(oResponse.statusCode).send({

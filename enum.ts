@@ -1,6 +1,6 @@
 const enums = {
     role: ['superAdmin', 'subAdmin', 'customer', 'employee'],
-    plan: ['basic', 'pro', 'enterprise'],
+    plan: ['basic', 'pro', 'enterprise', 'free'],
     permission: [
         'Orders',
         'Products',

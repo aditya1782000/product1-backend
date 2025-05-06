@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { AsyncResponseType } from '../../types/async';
 import BillingOption from '../../models/billingoptions';
+import User from '../../models/user';
 
 export const createBillingOption = async (
     billingOption: string,
@@ -98,6 +99,48 @@ export const deleteBillingOption = async (
             statusCode: 200,
             success: true,
             message: 'Billing option Deleted successfully',
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const customerBillingOptions = async (
+    customerId: string,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const customer = await User.findById(customerId);
+
+        if (!customer?.isBillingOption) {
+            return {
+                statusCode: 403,
+                success: false,
+                message: 'No Billing options access for this user',
+            };
+        }
+
+        const billingOptions = await BillingOption.find({
+            organization: organisation,
+        });
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Billing Options retrived successfully',
+            data: billingOptions,
         };
     } catch (error: unknown) {
         if (error instanceof Error) {

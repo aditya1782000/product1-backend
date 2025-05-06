@@ -15,6 +15,7 @@ import {
     productsList,
     recieveCustomerOrders,
     rejectOrder,
+    updateBillingOption,
     viewAdminOrder,
     viewCustomerOrder,
 } from './orders.services';
@@ -28,7 +29,8 @@ export const createCustomerOrderController = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organization = (req as any).sOrganization;
 
-    const { orderItems, totalAmount, status, deliveryAddress } = req.body;
+    const { orderItems, totalAmount, status, deliveryAddress, billingOption } =
+        req.body;
 
     const oResponse = await createCustomerOrder(
         customer,
@@ -37,6 +39,7 @@ export const createCustomerOrderController = async (
         status,
         organization,
         deliveryAddress,
+        billingOption,
     );
 
     return res.status(oResponse.statusCode).send({
@@ -267,7 +270,13 @@ export const createAdminOrdersControllers = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organization = (req as any).sOrganization;
 
-    const { orderItems, totalAmount, customer, deliveryAddress } = req.body;
+    const {
+        orderItems,
+        totalAmount,
+        customer,
+        deliveryAddress,
+        billingOption,
+    } = req.body;
 
     const oResponse = await createAdminOrders(
         customer,
@@ -275,6 +284,7 @@ export const createAdminOrdersControllers = async (
         totalAmount,
         organization,
         deliveryAddress,
+        billingOption,
     );
 
     return res.status(oResponse.statusCode).send({
@@ -338,6 +348,28 @@ export const getCustomerOrderListControllers = async (
         offSet,
         limit,
         id,
+        organization,
+    );
+
+    return res.status(oResponse.statusCode).send({
+        ...oResponse,
+        statusCode: undefined,
+    });
+};
+
+export const updateBillingOptionControllers = async (
+    req: Request,
+    res: Response,
+) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organization = (req as any).sOrganization;
+
+    const { billingOption } = req.body;
+    const { id } = req.params;
+
+    const oResponse = await updateBillingOption(
+        id,
+        billingOption,
         organization,
     );
 

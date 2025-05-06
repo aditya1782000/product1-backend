@@ -57,6 +57,7 @@ export const createCustomerOrder = async (
     status: string,
     organisation: mongoose.Types.ObjectId,
     deliveryAddress: string,
+    billingOption?: string,
 ): Promise<AsyncResponseType> => {
     try {
         const currentDate = new Date();
@@ -91,6 +92,7 @@ export const createCustomerOrder = async (
             orderNumber,
             deliveryAddress: new ObjectId(deliveryAddress),
             orderFrom: 'Customer',
+            billingOption,
         };
 
         const producer = myKafka.producer();
@@ -411,7 +413,7 @@ export const listCustomerPendingOrders = async (
                 '_id addressLineOne addressLineTwo city state pinCode customer organization',
             )
             .select(
-                'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems invoiceUrl',
+                'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems invoiceUrl billingOption',
             )
             .skip(start)
             .limit(limit)
@@ -464,7 +466,7 @@ export const listCustomerCompletedOrders = async (
                 '_id addressLineOne addressLineTwo city state pinCode customer organization',
             )
             .select(
-                'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems invoiceUrl',
+                'status totalAmount dCreatedAt dUpdatedAt deliveredAt orderNumber orderItems invoiceUrl billingOption',
             )
             .skip(start)
             .limit(limit)
@@ -514,7 +516,7 @@ export const viewAdminOrder = async (
                 '_id addressLineOne addressLineTwo city state pinCode customer organization',
             )
             .select(
-                'orderItems totalAmount status type deliveredAt dCreatedAt dUpdatedAt orderNumber invoiceUrl orderFrom',
+                'orderItems totalAmount status type deliveredAt dCreatedAt dUpdatedAt orderNumber invoiceUrl orderFrom billingOption',
             )
             .lean();
 
@@ -579,7 +581,7 @@ export const viewCustomerOrder = async (
                 '_id addressLineOne addressLineTwo city state pinCode customer organization',
             )
             .select(
-                'orderItems totalAmount status type deliveredAt dCreatedAt dUpdatedAt orderNumber',
+                'orderItems totalAmount status type deliveredAt dCreatedAt dUpdatedAt orderNumber billingOption',
             )
             .sort({ dCreatedAt: -1 })
             .lean();
@@ -971,6 +973,7 @@ export const createAdminOrders = async (
     totalAmount: number,
     organisation: mongoose.Types.ObjectId,
     deliveryAddress: string,
+    billingOption?: string,
 ): Promise<AsyncResponseType> => {
     try {
         const oCustomer = await User.findById({ _id: customer })
@@ -1030,6 +1033,7 @@ export const createAdminOrders = async (
             orderNumber,
             orderFrom: 'Admin',
             deliveryAddress: new ObjectId(deliveryAddress),
+            billingOption,
         });
 
         return {
@@ -1223,6 +1227,61 @@ export const getCustomerOrderList = async (
             draw: req.body.draw,
             recordsTotal: nRecordsTotal,
             recordsFiltered: nRecordsTotal,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return {
+                statusCode: 500,
+                success: false,
+                message: error.message || 'Something went wrong',
+            };
+        }
+
+        return {
+            statusCode: 500,
+            success: false,
+            message: 'Something went wrong',
+        };
+    }
+};
+
+export const updateBillingOption = async (
+    orderId: string,
+    billingOption: string,
+    organisation: mongoose.Types.ObjectId,
+): Promise<AsyncResponseType> => {
+    try {
+        const oOrder = await Order.findById({
+            _id: orderId,
+        }).populate('organization', '_id');
+
+        if (!oOrder) {
+            return {
+                statusCode: 404,
+                success: false,
+                message: 'Order not found',
+            };
+        }
+
+        if (
+            oOrder.organization &&
+            oOrder.organization._id.toString() !== organisation.toString()
+        ) {
+            return {
+                statusCode: 403,
+                success: false,
+                message: 'Unauthorized access',
+            };
+        }
+
+        await Order.findByIdAndUpdate(orderId, {
+            billingOption: billingOption,
+        });
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Billing Options is updated successfully.',
         };
     } catch (error: unknown) {
         if (error instanceof Error) {

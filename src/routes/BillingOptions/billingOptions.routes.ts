@@ -1,14 +1,17 @@
 import express from 'express';
 import {
     createBillingOptionValidators,
+    customerBillingOptionValidators,
     deleteBillingOptionValidators,
 } from './billingOptions.validators';
 import { isAdmin } from '../../middleware/isAdmin';
 import {
+    adminOrderCustomerBillingOptionControllers,
     createBillingOptionControllers,
     deleteBillingOptionControllers,
     listBillingOptionsControllers,
 } from './billingOptions.controllers';
+import { isCustomer } from '../../middleware/isCustomer';
 
 const router = express.Router();
 
@@ -30,6 +33,13 @@ router.delete(
     deleteBillingOptionValidators,
     isAdmin('', 'A'),
     deleteBillingOptionControllers,
+);
+
+router.get(
+    '/customer/billing/option/list',
+    customerBillingOptionValidators,
+    isCustomer(),
+    adminOrderCustomerBillingOptionControllers,
 );
 
 export default router;

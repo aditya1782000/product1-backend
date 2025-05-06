@@ -392,3 +392,22 @@ export const customerCompletedOrderListValidators = [
         .isNumeric()
         .withMessage('Invalid limit value'),
 ];
+
+export const updateBillingOptionValidators = [
+    param('id')
+        .notEmpty()
+        .withMessage('id is required')
+        .bail()
+        .isMongoId()
+        .withMessage('Invalid id'),
+
+    body('billingOption')
+        .notEmpty()
+        .withMessage('Billing Option is required')
+        .bail()
+        .isString()
+        .withMessage('Billing option must be a string')
+        .bail()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('Billing Options must be between 1 to 100 characters'),
+];

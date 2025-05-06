@@ -16,6 +16,7 @@ import {
     productsListControllers,
     receiveCustomerOrdersControllers,
     rejectedOrderControllers,
+    updateBillingOptionControllers,
     viewAdminOrderControllers,
     viewCustomerOrderControllers,
 } from './orders.controllers';
@@ -32,6 +33,7 @@ import {
     listCompletedOrdersValidators,
     listPendingOrdersValidators,
     rejectOrderValidators,
+    updateBillingOptionValidators,
     viewAdminOrderValidators,
 } from './orders.validators';
 import { isAdmin } from '../../middleware/isAdmin';
@@ -125,6 +127,13 @@ router.post(
     cusotmerOrderValidators,
     isAdmin('', 'V'),
     getCustomerOrderListControllers,
+);
+
+router.patch(
+    '/admin/order/:id/update/billing/options',
+    updateBillingOptionValidators,
+    isAdmin('Orders', 'E'),
+    updateBillingOptionControllers,
 );
 
 // Customer APIs

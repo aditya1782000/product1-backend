@@ -48,7 +48,7 @@ export const addStatements = async (
         return {
             statusCode: 500,
             success: false,
-            message: 'Something went wrong',
+            message: error as unknown as string,
         };
     } finally {
         if (req?.file?.path) {

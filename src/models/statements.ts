@@ -32,11 +32,11 @@ const StatementDataSchema: Schema<IStatementData> = new Schema<IStatementData>({
     },
     vchType: {
         type: String,
-        required: true,
+        // required: true,
     },
     vchNo: {
         type: String,
-        required: true,
+        // required: true,
     },
     debit: Number,
     credit: Number,

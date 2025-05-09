@@ -255,7 +255,10 @@ export const listPendingOrders = async (
         const nRecordsTotal = await Order.countDocuments(orderQuery);
 
         const orders = await Order.find(orderQuery)
-            .populate('customer', '_id firstName lastName phoneNumber')
+            .populate(
+                'customer',
+                '_id firstName lastName phoneNumber orgnaizationName',
+            )
             .select('totalAmount dCreatedAt status orderNumber')
             .collation({ locale: 'en', strength: 1 })
             .sort({ dCreatedAt: -1 })
@@ -348,7 +351,10 @@ export const listCompletedOrders = async (
         const nRecordsTotal = await Order.countDocuments(orderQuery);
 
         const orders = await Order.find(orderQuery)
-            .populate('customer', '_id firstName lastName phoneNumber')
+            .populate(
+                'customer',
+                '_id firstName lastName phoneNumber orgnaizationName',
+            )
             .select(
                 'totalAmount dCreatedAt dUpdatedAt status orderNumber orderFrom',
             )

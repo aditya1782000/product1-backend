@@ -41,6 +41,7 @@ export const addProduct = async (
     unitType: string,
     price: AreaPrice[],
     category: string,
+    gstPercentage: number,
     organisation: mongoose.Types.ObjectId,
 ): Promise<AsyncResponseType> => {
     let tempFilePath: string | undefined;
@@ -79,6 +80,7 @@ export const addProduct = async (
             unitType,
             price,
             category,
+            gstPercentage,
             organization: organisation,
         });
 
@@ -169,7 +171,7 @@ export const productView = async (
 ): Promise<AsyncResponseType> => {
     try {
         const selectedFields =
-            'productName description howToUse productImageUrl unitType price isActive organization category';
+            'productName description howToUse productImageUrl unitType price isActive organization category gstPercentage';
 
         const oProduct = await Product.findOne({
             _id: productId,
@@ -296,6 +298,7 @@ export const productEdit = async (
     howToUse?: string,
     unitType?: string,
     category?: string,
+    gstPercentage?: number,
     price?: AreaPrice[],
 ): Promise<AsyncResponseType> => {
     let tempFilePath: string | undefined;
@@ -348,6 +351,7 @@ export const productEdit = async (
             unitType,
             price,
             category,
+            gstPercentage,
         });
 
         if (!updateProduct) {

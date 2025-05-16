@@ -21,6 +21,7 @@ export const addProductsController = async (req: Request, res: Response) => {
         unitType,
         category,
         gstPercentage,
+        colors,
     } = req.body;
 
     let price;
@@ -47,6 +48,7 @@ export const addProductsController = async (req: Request, res: Response) => {
         category,
         Number(gstPercentage),
         organization,
+        colors,
     );
 
     return res.status(oResponse.statusCode).send({
@@ -110,6 +112,7 @@ export const editProductController = async (req: Request, res: Response) => {
         unitType,
         category,
         gstPercentage,
+        colors,
     } = req.body;
 
     let price;
@@ -137,6 +140,7 @@ export const editProductController = async (req: Request, res: Response) => {
         category,
         Number(gstPercentage),
         price,
+        colors,
     );
 
     return res.status(oResponse.statusCode).send({

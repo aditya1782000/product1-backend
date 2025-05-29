@@ -239,7 +239,7 @@ export const productView = async (
 ): Promise<AsyncResponseType> => {
     try {
         const selectedFields =
-            'productName description howToUse productImageUrl unitType price isActive organization category gstPercentage colors';
+            'productName description howToUse productImageUrl unitType price isActive organization category gstPercentage colors productType pricingType singlePrice areaSinglePrice customerTypeSingleAreaPrice';
 
         const oProduct = await Product.findOne({
             _id: productId,
@@ -369,6 +369,11 @@ export const productEdit = async (
     gstPercentage?: number,
     price?: AreaPrice[],
     colors?: string[],
+    pricingType?: string,
+    productType?: string,
+    singlePrice?: QuantityPrice[],
+    areaSinglePrice?: AreaSinglePrice[],
+    customerTypeSingleAreaPrice?: CustomerTypeSingleAreaPrice[],
 ): Promise<AsyncResponseType> => {
     let tempFilePath: string | undefined;
     try {
@@ -401,7 +406,7 @@ export const productEdit = async (
         if (req.file !== undefined) {
             if (oProduct.productImageUrl) {
                 const key = extractS3Key(oProduct.productImageUrl);
-                deleteFileFromS3(key);
+                await deleteFileFromS3(key);
             }
             tempFilePath = req.file.path;
             const uploadData = await uploadFileToS3(
@@ -412,17 +417,86 @@ export const productEdit = async (
             productImageUrl = uploadData.Location;
         }
 
-        const updateProduct = await Product.findByIdAndUpdate(oProduct._id, {
+        let updateProduct;
+
+        const baseUpdateData = {
             productName,
             description,
             howToUse,
-            productImageUrl,
             unitType,
-            price,
             category,
             gstPercentage,
-            colors,
-        });
+            productType,
+            pricingType,
+            ...(productImageUrl !== undefined && { productImageUrl }),
+            ...(colors !== undefined && { colors }),
+        };
+
+        if (pricingType === 'areaCustomerType') {
+            updateProduct = await Product.findByIdAndUpdate(
+                oProduct._id,
+                {
+                    ...baseUpdateData,
+                    ...(price !== undefined && { price }),
+                    $unset: {
+                        singlePrice: 1,
+                        areaSinglePrice: 1,
+                        customerTypeSingleAreaPrice: 1,
+                    },
+                },
+                { new: true },
+            );
+        } else if (pricingType === 'singlePrice') {
+            updateProduct = await Product.findByIdAndUpdate(
+                oProduct._id,
+                {
+                    ...baseUpdateData,
+                    ...(singlePrice !== undefined && { singlePrice }),
+                    $unset: {
+                        price: 1,
+                        areaSinglePrice: 1,
+                        customerTypeSingleAreaPrice: 1,
+                    },
+                },
+                { new: true },
+            );
+        } else if (pricingType === 'areaSinglePrice') {
+            updateProduct = await Product.findByIdAndUpdate(
+                oProduct._id,
+                {
+                    ...baseUpdateData,
+                    ...(areaSinglePrice !== undefined && { areaSinglePrice }),
+                    $unset: {
+                        price: 1,
+                        singlePrice: 1,
+                        customerTypeSingleAreaPrice: 1,
+                    },
+                },
+                { new: true },
+            );
+        } else if (pricingType === 'customerTypeSingleAreaPrice') {
+            updateProduct = await Product.findByIdAndUpdate(
+                oProduct._id,
+                {
+                    ...baseUpdateData,
+                    ...(customerTypeSingleAreaPrice !== undefined && {
+                        customerTypeSingleAreaPrice,
+                    }),
+                    $unset: {
+                        price: 1,
+                        singlePrice: 1,
+                        areaSinglePrice: 1,
+                    },
+                },
+                { new: true },
+            );
+        } else {
+            updateProduct = await Product.findByIdAndUpdate(
+                oProduct._id,
+                baseUpdateData,
+                { new: true },
+            );
+        }
 
         if (!updateProduct) {
             return {
@@ -530,11 +604,21 @@ export const customerProductList = async (
     limit: number,
 ): Promise<AsyncResponseType> => {
     try {
-        const queryConditions = {
+        const baseQueryConditions = {
             organization: organisation,
             isActive: true,
             isDeleted: { $ne: true },
             ...(category && { category }),
+        };
+
+        const areaCustomerTypeQuery = {
+            ...baseQueryConditions,
+            $or: [
+                { pricingType: 'areaCustomerType' },
+                { pricingType: { $exists: false } },
+                { pricingType: null },
+                { pricingType: '' },
+            ],
             price: {
                 $elemMatch: {
                     area: pinCode.toString(),
@@ -543,12 +627,51 @@ export const customerProductList = async (
             },
         };
 
-        const products = await Product.find(queryConditions, {
+        const singlePriceQuery = {
+            ...baseQueryConditions,
+            pricingType: 'singlePrice',
+            singlePrice: { $exists: true, $ne: null },
+        };
+
+        const areaSinglePriceQuery = {
+            ...baseQueryConditions,
+            pricingType: 'areaSinglePrice',
+            areaSinglePrice: {
+                $elemMatch: {
+                    area: pinCode.toString(),
+                },
+            },
+        };
+
+        const customerTypeSingleAreaPriceQuery = {
+            ...baseQueryConditions,
+            pricingType: 'customerTypeSingleAreaPrice',
+            customerTypeSingleAreaPrice: {
+                $elemMatch: {
+                    customerType: customerType,
+                },
+            },
+        };
+
+        const combinedQuery = {
+            $or: [
+                areaCustomerTypeQuery,
+                singlePriceQuery,
+                areaSinglePriceQuery,
+                customerTypeSingleAreaPriceQuery,
+            ],
+        };
+
+        const products = await Product.find(combinedQuery, {
             productName: 1,
             description: 1,
             howToUse: 1,
             productImageUrl: 1,
             price: 1,
+            singlePrice: 1,
+            areaSinglePrice: 1,
+            customerTypeSingleAreaPrice: 1,
+            pricingType: 1,
             category: 1,
             colors: 1,
         })
@@ -567,17 +690,77 @@ export const customerProductList = async (
 
         const processedProducts = products
             .map((product) => {
-                const areaPrice = product?.price?.find(
-                    (p) => p.area === pinCode.toString(),
-                );
+                let priceData = null;
 
-                if (!areaPrice) return null;
+                switch (product.pricingType) {
+                    case 'areaCustomerType':
+                    case undefined:
+                    case null:
+                    case '':
+                        const areaPrice = product?.price?.find(
+                            (p) => p.area === pinCode.toString(),
+                        );
+                        if (!areaPrice) return null;
 
-                const customerTypePrice = areaPrice.customerTypePrices.find(
-                    (ctp) => ctp.customerType === customerType,
-                );
+                        const customerTypePrice =
+                            areaPrice.customerTypePrices.find(
+                                (ctp) => ctp.customerType === customerType,
+                            );
+                        if (!customerTypePrice?.prices?.length) return null;
 
-                if (!customerTypePrice?.prices?.length) return null;
+                        priceData = [
+                            {
+                                area: areaPrice.area,
+                                prices: customerTypePrice.prices,
+                            },
+                        ];
+                        break;
+
+                    case 'singlePrice':
+                        if (!product.singlePrice?.length) return null;
+                        priceData = [
+                            {
+                                area: 'all',
+                                prices: product.singlePrice,
+                            },
+                        ];
+                        break;
+
+                    case 'areaSinglePrice':
+                        const areaSinglePrice = product?.areaSinglePrice?.find(
+                            (asp) => asp.area === pinCode.toString(),
+                        );
+                        if (!areaSinglePrice?.prices?.length) return null;
+
+                        priceData = [
+                            {
+                                area: areaSinglePrice.area,
+                                prices: areaSinglePrice.prices,
+                            },
+                        ];
+                        break;
+
+                    case 'customerTypeSingleAreaPrice':
+                        const customerTypeSingleAreaPrice =
+                            product?.customerTypeSingleAreaPrice?.find(
+                                (ctsap) => ctsap.customerType === customerType,
+                            );
+                        if (!customerTypeSingleAreaPrice?.prices?.length)
+                            return null;
+
+                        priceData = [
+                            {
+                                area: 'all',
+                                prices: customerTypeSingleAreaPrice.prices,
+                            },
+                        ];
+                        break;
+
+                    default:
+                        return null;
+                }
+
+                if (!priceData) return null;
 
                 return {
                     _id: product._id,
@@ -585,12 +768,7 @@ export const customerProductList = async (
                     description: product.description,
                     howToUse: product.howToUse,
                     productImageUrl: product.productImageUrl,
-                    price: [
-                        {
-                            area: areaPrice.area,
-                            prices: customerTypePrice.prices,
-                        },
-                    ],
+                    price: priceData,
                     category: product.category,
                     colors: product.colors,
                 };
@@ -601,7 +779,7 @@ export const customerProductList = async (
             return {
                 statusCode: 404,
                 success: false,
-                message: 'No products found for the specified customer type',
+                message: 'No products found for the specified criteria',
             };
         }
 

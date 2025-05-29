@@ -123,6 +123,11 @@ export const editProductController = async (req: Request, res: Response) => {
         category,
         gstPercentage,
         colors,
+        pricingType,
+        productType,
+        singlePrice,
+        areaSinglePrice,
+        customerTypeSingleAreaPrice,
     } = req.body;
 
     let price;
@@ -151,6 +156,11 @@ export const editProductController = async (req: Request, res: Response) => {
         Number(gstPercentage),
         price,
         colors,
+        pricingType,
+        productType,
+        singlePrice,
+        areaSinglePrice,
+        customerTypeSingleAreaPrice,
     );
 
     return res.status(oResponse.statusCode).send({

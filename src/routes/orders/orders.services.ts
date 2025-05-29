@@ -1177,7 +1177,9 @@ export const productsList = async (
             organization: { $in: organisation },
             isDeleted: { $ne: true },
         })
-            .select('_id productName productImageUrl price colors')
+            .select(
+                '_id productName productImageUrl price colors pricingType singlePrice areaSinglePrice customerTypeSingleAreaPrice',
+            )
             .lean();
 
         return {

@@ -1,4 +1,5 @@
 import { body, param, query } from 'express-validator';
+import enums from '../../../enum';
 
 export const addProductValidators = [
     body('productName')
@@ -35,6 +36,20 @@ export const addProductValidators = [
 
     body('category').notEmpty().withMessage('Category is required'),
 
+    body('productType')
+        .notEmpty()
+        .withMessage('Product Type is required')
+        .bail()
+        .isIn(enums.productType)
+        .withMessage('Invalid Product Type'),
+
+    body('pricingType')
+        .notEmpty()
+        .withMessage('Pricing Type is required')
+        .bail()
+        .isIn(enums.pricingType)
+        .withMessage('Invalid Pricing Type'),
+
     body('colors')
         .optional()
         .bail()
@@ -48,47 +63,63 @@ export const addProductValidators = [
         .isNumeric()
         .withMessage('Product Percentage must be a number'),
 
-    body('price')
-        .isArray({ min: 1 })
-        .withMessage('Price must be an array and cannot be empty'),
+    body().custom((_value, { req }) => {
+        const {
+            pricingType,
+            price,
+            singlePrice,
+            areaSinglePrice,
+            customerTypeSingleAreaPrice,
+        } = req.body;
 
-    body('price.*.area')
-        .notEmpty()
-        .withMessage('Area is required')
-        .bail()
-        .isString()
-        .withMessage('Area must be a string'),
+        switch (pricingType) {
+            case 'areaCustomerType':
+                if (!price || !Array.isArray(price) || price.length === 0) {
+                    throw new Error(
+                        'Price array is required for areaCustomerType pricing',
+                    );
+                }
+                break;
 
-    body('price.*.customerTypePrices')
-        .isArray({ min: 1 })
-        .withMessage(
-            'Customer type prices must be an array and cannot be empty',
-        ),
+            case 'singlePrice':
+                if (
+                    !singlePrice ||
+                    !Array.isArray(singlePrice) ||
+                    singlePrice.length === 0
+                ) {
+                    throw new Error(
+                        'SinglePrice array is required for singlePrice pricing',
+                    );
+                }
+                break;
 
-    body('price.*.customerTypePrices.*.customerType')
-        .notEmpty()
-        .withMessage('Customer type is required')
-        .bail()
-        .isString()
-        .withMessage('Customer type must be a string'),
+            case 'areaSinglePrice':
+                if (
+                    !areaSinglePrice ||
+                    !Array.isArray(areaSinglePrice) ||
+                    areaSinglePrice.length === 0
+                ) {
+                    throw new Error(
+                        'AreaSinglePrice array is required for areaSinglePrice pricing',
+                    );
+                }
+                break;
 
-    body('price.*.customerTypePrices.*.prices')
-        .isArray({ min: 1 })
-        .withMessage('Prices must be an array and cannot be empty'),
+            case 'customerTypeSingleAreaPrice':
+                if (
+                    !customerTypeSingleAreaPrice ||
+                    !Array.isArray(customerTypeSingleAreaPrice) ||
+                    customerTypeSingleAreaPrice.length === 0
+                ) {
+                    throw new Error(
+                        'CustomerTypeSingleAreaPrice array is required for customerTypeSingleAreaPrice pricing',
+                    );
+                }
+                break;
+        }
 
-    body('price.*.customerTypePrices.*.prices.*.quantityType')
-        .notEmpty()
-        .withMessage('Quantity type is required')
-        .bail()
-        .isString()
-        .withMessage('Quantity type must be a string'),
-
-    body('price.*.customerTypePrices.*.prices.*.price')
-        .notEmpty()
-        .withMessage('Price is required')
-        .bail()
-        .isFloat({ gt: 0 })
-        .withMessage('Price must be greater than zero'),
+        return true;
+    }),
 ];
 
 export const listProductsValidators = [
@@ -182,21 +213,30 @@ export const editProductValidators = [
         .withMessage('Product name is required')
         .bail()
         .isString()
-        .withMessage('Product name must be string'),
+        .withMessage('Product name must be string')
+        .bail()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('Product name must be between 1 to 100 characters'),
 
     body('description')
         .notEmpty()
         .withMessage('Description is required')
         .bail()
         .isString()
-        .withMessage('Description must be string'),
+        .withMessage('Description must be string')
+        .bail()
+        .isLength({ min: 1, max: 2000 })
+        .withMessage('Description must be between 1 to 100 characters'),
 
     body('howToUse')
         .notEmpty()
         .withMessage('How to use is required')
         .bail()
         .isString()
-        .withMessage('How To Use must be string'),
+        .withMessage('How To Use must be string')
+        .bail()
+        .isLength({ min: 1, max: 2000 })
+        .withMessage('How to use name must be between 1 to 100 characters'),
 
     body('unitType').notEmpty().withMessage('Unit Type is required'),
 
@@ -213,33 +253,63 @@ export const editProductValidators = [
         .isArray()
         .withMessage('Colors must be an array'),
 
-    //UnComment when integrate the React
+    body().custom((_value, { req }) => {
+        const {
+            pricingType,
+            price,
+            singlePrice,
+            areaSinglePrice,
+            customerTypeSingleAreaPrice,
+        } = req.body;
 
-    // body('price')
-    //     .isArray({ min: 1 })
-    //     .withMessage('Price must be an array and cannot be empty'),
+        switch (pricingType) {
+            case 'areaCustomerType':
+                if (!price || !Array.isArray(price) || price.length === 0) {
+                    throw new Error(
+                        'Price array is required for areaCustomerType pricing',
+                    );
+                }
+                break;
 
-    // body('price.*.area')
-    //     .notEmpty()
-    //     .withMessage('Area is required')
-    //     .bail()
-    //     .isString()
-    //     .withMessage('area must be a string'),
+            case 'singlePrice':
+                if (
+                    !singlePrice ||
+                    !Array.isArray(singlePrice) ||
+                    singlePrice.length === 0
+                ) {
+                    throw new Error(
+                        'SinglePrice array is required for singlePrice pricing',
+                    );
+                }
+                break;
 
-    // body('price.*.prices')
-    //     .isArray({ min: 1 })
-    //     .withMessage('Price must be an array and cannot be empty'),
+            case 'areaSinglePrice':
+                if (
+                    !areaSinglePrice ||
+                    !Array.isArray(areaSinglePrice) ||
+                    areaSinglePrice.length === 0
+                ) {
+                    throw new Error(
+                        'AreaSinglePrice array is required for areaSinglePrice pricing',
+                    );
+                }
+                break;
 
-    // body('price.*.prices.*.quantityType')
-    //     .notEmpty()
-    //     .withMessage('Quantity Type IS required')
-    //     .bail()
-    //     .isString()
-    //     .withMessage('Quantity Type Is required'),
+            case 'customerTypeSingleAreaPrice':
+                if (
+                    !customerTypeSingleAreaPrice ||
+                    !Array.isArray(customerTypeSingleAreaPrice) ||
+                    customerTypeSingleAreaPrice.length === 0
+                ) {
+                    throw new Error(
+                        'CustomerTypeSingleAreaPrice array is required for customerTypeSingleAreaPrice pricing',
+                    );
+                }
+                break;
+        }
 
-    // body('price.*.prices.*.price')
-    //     .isFloat({ gt: 0 })
-    //     .withMessage('Price must be greater than zero'),
+        return true;
+    }),
 ];
 
 export const deleteProductValidators = [
